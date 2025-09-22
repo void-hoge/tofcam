@@ -89,6 +89,7 @@ Camera::Camera(const char* device, const uint32_t num_buffers) {
 			if (data == MAP_FAILED) {
 				throw std::system_error(errno, std::generic_category(), "mmap failed.");
 			}
+			this->buffers.emplace_back(data, buf.length);
 		}
 	}
 	{ // enqueue all buffers
@@ -101,6 +102,40 @@ Camera::Camera(const char* device, const uint32_t num_buffers) {
 				throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_QBUF failed.");
 			}
 		}
+	}
+}
+
+void Camera::stream_on() {
+	uint32_t type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	if (syscall::ioctl(this->fd, VIDIOC_STREAMON, &type) < 0) {
+		throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_STREAMON failed.");
+	}
+}
+
+void Camera::stream_off() {
+	uint32_t type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	if (syscall::ioctl(this->fd, VIDIOC_STREAMOFF, &type) < 0) {
+		throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_STREAMOFF failed.");
+	}
+}
+
+std::pair<uint32_t, uint32_t> Camera::dequeue() {
+	struct v4l2_buffer buf = {};
+	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	buf.memory = V4L2_MEMORY_MMAP;
+	if (syscall::ioctl(this->fd, VIDIOC_DQBUF, &buf) < 0) {
+		throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_DQBUF failed.");
+	}
+	return {buf.bytesused, buf.index};
+}
+
+void Camera::enqueue(const uint32_t index) {
+	struct v4l2_buffer buf = {};
+	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	buf.memory = V4L2_MEMORY_MMAP;
+	buf.index = index;
+	if (syscall::ioctl(this->fd, VIDIOC_QBUF, &buf) < 0) {
+		throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_QBUF failed.");
 	}
 }
 

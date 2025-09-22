@@ -11,6 +11,14 @@ public:
 	~Camera();
 
 	Camera(const char* device, const uint32_t buffer_count);
+
+	void stream_on();
+
+	void stream_off();
+
+	std::pair<uint32_t, uint32_t> dequeue();
+
+	void enqueue(const uint32_t index);
 private:
 	int fd = -1;
 	uint32_t width = 0;
