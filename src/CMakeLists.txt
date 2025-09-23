@@ -10,3 +10,7 @@ target_include_directories(tofcam
 target_compile_features(tofcam
         PUBLIC cxx_std_17
 )
+
+target_compile_options(tofcam
+        PRIVATE -Wall -Wextra
+)
