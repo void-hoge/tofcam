@@ -37,28 +37,31 @@ Camera::Camera(const char* device, const uint32_t num_buffers) {
         fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         fmt.fmt.pix.field = V4L2_FIELD_NONE;
         fmt.fmt.pix.pixelformat = v4l2_fourcc('Y', '1', '2', 'P');
-        fmt.fmt.pix.width = 240;
-        fmt.fmt.pix.height = 180;
+        fmt.fmt.pix.width = WIDTH;
+        fmt.fmt.pix.height = HEIGHT;
         if (syscall::ioctl(this->fd, VIDIOC_S_FMT, &fmt) < 0) {
             this->reset();
             throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_S_FMT failed.");
         }
-        this->width = fmt.fmt.pix.width;
-        this->height = fmt.fmt.pix.height;
         this->sizeimage = fmt.fmt.pix.sizeimage;
-        if (this->width == 0) {
+        this->bytesperline = fmt.fmt.pix.bytesperline;
+        if (fmt.fmt.pix.width != WIDTH) {
             this->reset();
-            throw std::runtime_error("Width is zero, unsupported format?");
+            throw std::runtime_error("Unsupported width.");
         }
-        if (this->height == 0) {
+        if (fmt.fmt.pix.height != HEIGHT) {
             this->reset();
-            throw std::runtime_error("Height is zero, unsupported format?");
+            throw std::runtime_error("Unsupported height.");
         }
         if (this->sizeimage == 0) {
             this->reset();
             throw std::runtime_error("Sizeimage is zero, unsupported format?");
         }
-        fprintf(stderr, "size: %dx%d, sizeimage: %d\n", this->width, this->height, this->sizeimage);
+        if (this->bytesperline == 0) {
+            this->reset();
+            throw std::runtime_error("Bytesperline is zero, unsupported format?");
+        }
+        fprintf(stderr, "sizeimage: %d, bytesperline: %d\n", this->sizeimage, this->bytesperline);
     }
     { // setup mmap buffers
         struct v4l2_requestbuffers req = {};
@@ -94,13 +97,7 @@ Camera::Camera(const char* device, const uint32_t num_buffers) {
     }
     { // enqueue all buffers
         for (uint32_t i = 0; i < num_buffers; i++) {
-            struct v4l2_buffer buf = {};
-            buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-            buf.memory = V4L2_MEMORY_MMAP;
-            buf.index = i;
-            if (syscall::ioctl(this->fd, VIDIOC_QBUF, &buf) < 0) {
-                throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_QBUF failed.");
-            }
+            this->enqueue(i);
         }
     }
 }
@@ -119,14 +116,14 @@ void Camera::stream_off() {
     }
 }
 
-std::pair<uint32_t, uint32_t> Camera::dequeue() {
+std::pair<void*, uint32_t> Camera::dequeue() {
     struct v4l2_buffer buf = {};
     buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     buf.memory = V4L2_MEMORY_MMAP;
     if (syscall::ioctl(this->fd, VIDIOC_DQBUF, &buf) < 0) {
         throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_DQBUF failed.");
     }
-    return {buf.bytesused, buf.index};
+    return {buffers[buf.index].first, buf.index};
 }
 
 void Camera::enqueue(const uint32_t index) {
@@ -137,6 +134,14 @@ void Camera::enqueue(const uint32_t index) {
     if (syscall::ioctl(this->fd, VIDIOC_QBUF, &buf) < 0) {
         throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_QBUF failed.");
     }
+}
+
+std::pair<uint32_t, uint32_t> Camera::get_size() const {
+    return {WIDTH, HEIGHT};
+}
+
+std::pair<uint32_t, uint32_t> Camera::get_bytes() const {
+    return {this->sizeimage, this->bytesperline};
 }
 
 void Camera::reset() noexcept {
