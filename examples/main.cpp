@@ -7,18 +7,6 @@
 #include <iostream>
 #include <fstream>
 
-void save_bytes(const char *filename, const void *addr, const size_t size) {
-    FILE *fp = fopen(filename, "wb");
-    if (!fp) {
-        throw std::system_error(errno, std::generic_category(), "Failed to open file.");
-    }
-    const size_t written = fwrite(addr, 1, size, fp);
-    fclose(fp);
-    if (written != size) {
-        throw std::system_error(errno, std::generic_category(), "Failed to write all data.");
-    }
-}
-
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         fprintf(stderr, "usage: %s <device>\n", argv[0]);
