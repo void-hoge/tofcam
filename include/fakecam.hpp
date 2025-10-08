@@ -5,12 +5,11 @@
 #include <cstdint>
 
 namespace tofcam {
-
-class Camera {
+class FakeCamera {
 public:
-    ~Camera();
+    ~FakeCamera() = default;
 
-    Camera(const char* device, const uint32_t buffer_count);
+    FakeCamera(const char* dir);
 
     void stream_on();
 
@@ -29,13 +28,16 @@ public:
 private:
     static constexpr uint32_t WIDTH = 240;
     static constexpr uint32_t HEIGHT = 180;
-    
-    int fd = -1;
-    uint32_t sizeimage = 0;
-    uint32_t bytesperline = 0;
-    std::vector<std::pair<void*, uint32_t>> buffers;
+    static constexpr uint32_t BYTESPERLINE = 368;
+    static constexpr uint32_t SIZEIMAGE = BYTESPERLINE * HEIGHT;
+
+    uint32_t index = 0;
+
+    std::vector<std::vector<uint8_t>> frames;
 
     void reset() noexcept;
+
+    void load_frames(const char* dir);
 };
 
 }

@@ -2,6 +2,7 @@ add_library(tofcam
     tofcam.cpp
     syscall.cpp
     utility.cpp
+    fakecam.cpp
 )
 
 target_include_directories(tofcam
