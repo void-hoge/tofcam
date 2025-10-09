@@ -55,8 +55,8 @@ void compute_depth_amplitude(float *depth, float *amplitude, int16_t* raw,
         const int16_t I1 = frame1[i];
         const int16_t I2 = frame2[i];
         const int16_t I3 = frame3[i];
-        const auto num = static_cast<int32_t>(I3 - I1);
-        const auto den = static_cast<int32_t>(I0 - I2);
+        const auto num = static_cast<int16_t>(I3 - I1);
+        const auto den = static_cast<int16_t>(I0 - I2);
         raw[i] = I0 + I1 + I2 + I3;
         amplitude[i] = std::sqrt(den * den + num * num);
 #if 0
