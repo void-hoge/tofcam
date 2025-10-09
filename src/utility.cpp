@@ -22,6 +22,25 @@ void unpack_y12p(int16_t *dst, const void *src,
     }
 }
 
+static inline float approx_atan2(const int16_t y, const int16_t x) {
+    constexpr float PI = M_PI / 2;
+    constexpr float HPI = M_PI / 2;
+    constexpr float ALPHA = 1.05839816339f;
+    constexpr float BETA = 0.273f;
+    if (x == 0 && y == 0) return 0.0f;
+    const int16_t ax = std::abs(x);
+    const int16_t ay = std::abs(y);
+    const bool swap = (ay > ax);
+    const int16_t amax = swap ? ay : ax;
+    const int16_t amin = swap ? ax : ay;
+    const float t = (float)amin/amax;
+    const float a = t * (ALPHA - BETA * t);
+    float theta = swap ? (HPI - a) : a;
+    if (x < 0) theta = PI - theta;
+    if (y < 0) theta = -theta;
+    return theta;
+}
+
 void compute_depth_amplitude(float *depth, float *amplitude, int16_t* raw,
                              const int16_t *frame0, const int16_t *frame1,
                              const int16_t *frame2, const int16_t *frame3,
@@ -40,7 +59,11 @@ void compute_depth_amplitude(float *depth, float *amplitude, int16_t* raw,
         const auto den = static_cast<int32_t>(I0 - I2);
         raw[i] = I0 + I1 + I2 + I3;
         amplitude[i] = std::sqrt(den * den + num * num);
+#if 0
         const float phase = std::atan2(num, den);
+#else
+        const float phase = approx_atan2(num, den);
+#endif
         depth[i] = (phase >= M_PI || ((den == 0) && (num == 0))) ? 0.0f : phase * scale + bias;
     }
 }
