@@ -23,7 +23,7 @@ void unpack_y12p(int16_t *dst, const void *src,
 }
 
 static inline float approx_atan2(const int16_t y, const int16_t x) {
-    constexpr float PI = M_PI / 2;
+    constexpr float PI = M_PI;
     constexpr float HPI = M_PI / 2;
     constexpr float ALPHA = 1.05839816339f;
     constexpr float BETA = 0.273f;
@@ -55,8 +55,8 @@ void compute_depth_amplitude(float *depth, float *amplitude, int16_t* raw,
         const int16_t I1 = frame1[i];
         const int16_t I2 = frame2[i];
         const int16_t I3 = frame3[i];
-        const auto num = static_cast<int16_t>(I3 - I1);
-        const auto den = static_cast<int16_t>(I0 - I2);
+        const int16_t num = I3 - I1;
+        const int16_t den = I0 - I2;
         raw[i] = I0 + I1 + I2 + I3;
         amplitude[i] = std::sqrt(den * den + num * num);
 #if 0
