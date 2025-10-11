@@ -1,5 +1,4 @@
 #include <tofcam.hpp>
-#include <fakecam.hpp>
 #include <utility.hpp>
 #include <cstdlib>
 #include <cstdio>
@@ -15,7 +14,7 @@ int main(int argc, char* argv[]) {
     }
     const char* device = argv[1];
 
-    auto camera = tofcam::FakeCamera(device);
+    auto camera = tofcam::Camera(device, 8);
 
     const auto [width, height] = camera.get_size();
     const auto [sizeimage, bytesperline] = camera.get_bytes();
