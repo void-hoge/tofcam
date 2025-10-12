@@ -17,11 +17,13 @@ void FakeCamera::stream_on() {}
 void FakeCamera::stream_off() {}
 
 std::pair<void*, uint32_t> FakeCamera::dequeue() {
-    return {this->frames[index].data(), index};
+    auto ret = std::pair<void*, uint32_t>{this->frames[this->index].data(), this->index};
+    this->index = index >= (this->frames.size() - 1) ? 0 : index + 1;
+    return ret;
 }
 
 void FakeCamera::enqueue(const uint32_t index) {
-    this->index = index >= (this->frames.size() - 1) ? 0 : index + 1;
+    // this->index = index >= (this->frames.size() - 1) ? 0 : index + 1;
 }
 
 std::pair<uint32_t, uint32_t> FakeCamera::get_size() const {
