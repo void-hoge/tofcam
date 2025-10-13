@@ -10,7 +10,7 @@ target_include_directories(tofcam
 )
 
 target_compile_features(tofcam
-    PUBLIC cxx_std_17
+    PUBLIC cxx_std_20
 )
 
 target_compile_options(tofcam

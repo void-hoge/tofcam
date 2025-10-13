@@ -29,12 +29,12 @@ static inline float approx_atan2(const int16_t y, const int16_t x) {
     constexpr float QPI = M_PI / 4;
     constexpr float R = 0.273f;
     if (x == 0 && y == 0) return 0.0f;
-    const int16_t ax = std::abs(x);
-    const int16_t ay = std::abs(y);
+    const int16_t ax = std::abs(int(x));
+    const int16_t ay = std::abs(int(y));
     const bool swap = (ay > ax);
     const int16_t amax = swap ? ay : ax;
     const int16_t amin = swap ? ax : ay;
-    const float t = (float)amin/amax;
+    const float t = float(amin) / float(amax);
     const float a = t * (QPI + R - R * t);
     float theta = swap ? (HPI - a) : a;
     if (x < 0) theta = PI - theta;
@@ -56,16 +56,16 @@ void compute_depth_amplitude(float *depth, float *amplitude, int16_t* raw,
         const int16_t I1 = frame1[i];
         const int16_t I2 = frame2[i];
         const int16_t I3 = frame3[i];
-        const int16_t num = I3 - I1;
-        const int16_t den = I0 - I2;
-        // raw[i] = I0 + I1 + I2 + I3;
-        // amplitude[i] = std::sqrt(den * den + num * num);
+        const int16_t sin = I3 - I1;
+        const int16_t cos = I0 - I2;
+        raw[i] = I0 + I1 + I2 + I3;
+        amplitude[i] = std::sqrt(float(cos) * cos + float(sin) * sin);
 #if 0
-        const float phase = std::atan2(num, den);
+        const float phase = std::atan2(sin, cos);
 #else
-        const float phase = approx_atan2(num, den);
+        const float phase = approx_atan2(sin, cos);
 #endif
-        depth[i] = (phase >= M_PI || ((den == 0) && (num == 0))) ? 0.0f : phase * scale + bias;
+        depth[i] = (phase >= M_PI || ((cos == 0) && (sin == 0))) ? 0.0f : phase * scale + bias;
     }
 }
 
@@ -90,6 +90,7 @@ static inline void approx_atan2x8(const int16x8_t &y, const int16x8_t x,
     const float32x4_t vQuadPI = vdupq_n_f32(0.25f);
     const float32x4_t vR = vdupq_n_f32(0.273 / M_PI);
     const float32x4_t vT = vaddq_f32(vQuadPI, vR);
+    const int16x8_t vZ = vdupq_n_s16(0);
 
     const int16x8_t ay = vabsq_s16(y);
     const int16x8_t ax = vabsq_s16(x);
@@ -114,20 +115,20 @@ static inline void approx_atan2x8(const int16x8_t &y, const int16x8_t x,
     thetalo = vbslq_f32(vcgtq_u32(swaplo, vdupq_n_u32(0)), vsubq_f32(vHalfPI, alo), alo);
     thetahi = vbslq_f32(vcgtq_u32(swaphi, vdupq_n_u32(0)), vsubq_f32(vHalfPI, ahi), ahi);
 
-    const uint16x8_t xneg = vcltzq_s16(x);
+    const uint16x8_t xneg = vcltq_s16(x, vZ);
     const uint32x4_t xneglo = vmovl_u16(vget_low_u16 (xneg));
     const uint32x4_t xneghi = vmovl_u16(vget_high_u16(xneg));
     thetalo = vbslq_f32(vcgtq_u32(xneglo, vdupq_n_u32(0)), vsubq_f32(vPI, thetalo), thetalo);
     thetahi = vbslq_f32(vcgtq_u32(xneghi, vdupq_n_u32(0)), vsubq_f32(vPI, thetahi), thetahi);
 
-    const uint16x8_t yneg = vcltzq_s16(y);
+    const uint16x8_t yneg = vcltq_s16(y, vZ);
     const uint32x4_t yneglo = vmovl_u16(vget_low_u16 (yneg));
     const uint32x4_t yneghi = vmovl_u16(vget_high_u16(yneg));
     thetalo = vbslq_f32(vcgtq_u32(yneglo, vdupq_n_u32(0)), vnegq_f32(thetalo), thetalo);
     thetahi = vbslq_f32(vcgtq_u32(yneghi, vdupq_n_u32(0)), vnegq_f32(thetahi), thetahi);
 
-    const uint16x8_t xzero = vceqzq_s16(x);
-    const uint16x8_t yzero = vceqzq_s16(y);
+    const uint16x8_t xzero = vceqq_s16(x, vZ);
+    const uint16x8_t yzero = vceqq_s16(y, vZ);
     const uint16x8_t bzero = vandq_u16(xzero, yzero);
     const uint32x4_t bzerolo = vmovl_u16(vget_low_u16 (bzero));
     const uint32x4_t bzerohi = vmovl_u16(vget_high_u16(bzero));
@@ -167,9 +168,9 @@ void compute_depth_from_y12p_neon(float *depth,
             float32x4x2_t depthhi;
             for (uint32_t i = 0; i < 2; i++) {
                 int16x8_t cos, sin;
-                cos = vsubq_s16(p3[i], p1[i]);
-                sin = vsubq_s16(p0[i], p2[i]);
-                approx_atan2x8(cos, sin, depthlo.val[i], depthhi.val[i]);
+                sin = vsubq_s16(p3[i], p1[i]);
+                cos = vsubq_s16(p0[i], p2[i]);
+                approx_atan2x8(sin, cos, depthlo.val[i], depthhi.val[i]);
                 depthlo.val[i] = vfmaq_f32(vBias, depthlo.val[i], vScale);
                 depthhi.val[i] = vfmaq_f32(vBias, depthhi.val[i], vScale);
             }
