@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cassert>
+#include <numbers>
 
 // #define NEON_APPROX_DIV
 
@@ -26,9 +27,9 @@ void unpack_y12p(int16_t *dst, const void *src,
 }
 
 static inline float approx_atan2(const int16_t y, const int16_t x) {
-    constexpr float PI = M_PI;
-    constexpr float HPI = M_PI / 2;
-    constexpr float QPI = M_PI / 4;
+    constexpr float PI = std::numbers::pi_v<float>;
+    constexpr float HPI = std::numbers::pi_v<float> / 2;
+    constexpr float QPI = std::numbers::pi_v<float> / 4;
     constexpr float R = 0.273f;
     if (x == 0 && y == 0) return 0.0f;
     const int16_t ax = std::abs(int(x));
@@ -51,7 +52,7 @@ void compute_depth_amplitude(float *depth, float *amplitude, int16_t* raw,
     constexpr float C = 3e8; // speed of light (300,000,000 m/s)
     const float range = C / (2.0f * modfreq_hz) * 1000.0f;
     const float bias = 0.5f * range;
-    const float scale = bias / M_PI;
+    const float scale = bias * std::numbers::inv_pi_v<float>;
 
     for (size_t i = 0; i < num_pixels; i++) {
         const int16_t I0 = frame0[i];
@@ -67,7 +68,7 @@ void compute_depth_amplitude(float *depth, float *amplitude, int16_t* raw,
 #else
         const float phase = approx_atan2(sin, cos);
 #endif
-        depth[i] = (phase >= M_PI || ((cos == 0) && (sin == 0))) ? 0.0f : phase * scale + bias;
+        depth[i] = (phase >= std::numbers::pi_v<float> || ((cos == 0) && (sin == 0))) ? 0.0f : phase * scale + bias;
     }
 }
 
@@ -90,7 +91,7 @@ static inline void approx_atan2x8(const int16x8_t &y, const int16x8_t x,
     const float32x4_t vPI = vdupq_n_f32(1.0f);
     const float32x4_t vHalfPI = vdupq_n_f32(0.5f);
     const float32x4_t vQuadPI = vdupq_n_f32(0.25f);
-    const float32x4_t vR = vdupq_n_f32(0.273 / M_PI);
+    const float32x4_t vR = vdupq_n_f32(0.273 * std::numbers::inv_pi_v<float>);
     const float32x4_t vT = vaddq_f32(vQuadPI, vR);
     const int16x8_t vZ = vdupq_n_s16(0);
 
