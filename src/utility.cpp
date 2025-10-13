@@ -12,9 +12,9 @@ void unpack_y12p(int16_t *dst, const void *src,
                  const uint32_t width, const uint32_t height,
                  const uint32_t bytesperline) {
     const uint32_t num_pairs = width / 2;
-    for (size_t y = 0; y < height; y++) {
+    for (uint32_t y = 0; y < height; y++) {
         const uint8_t* line = static_cast<const uint8_t*>(src) + y * bytesperline;
-        for (size_t x = 0; x < num_pairs; x++) {
+        for (uint32_t x = 0; x < num_pairs; x++) {
             const uint16_t b0 = line[x * 3 + 0];
             const uint16_t b1 = line[x * 3 + 1];
             const uint16_t b2 = line[x * 3 + 2];
@@ -54,7 +54,7 @@ void compute_depth_amplitude(float *depth, float *amplitude, int16_t* raw,
     const float bias = 0.5f * range;
     const float scale = bias * std::numbers::inv_pi_v<float>;
 
-    for (size_t i = 0; i < num_pixels; i++) {
+    for (uint32_t i = 0; i < num_pixels; i++) {
         const int16_t I0 = frame0[i];
         const int16_t I1 = frame1[i];
         const int16_t I2 = frame2[i];
