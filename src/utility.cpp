@@ -3,6 +3,8 @@
 #include <cstdio>
 #include <cassert>
 
+// #define NEON_APPROX_DIV
+
 namespace tofcam {
 
 void unpack_y12p(int16_t *dst, const void *src,
@@ -104,8 +106,17 @@ static inline void approx_atan2x8(const int16x8_t &y, const int16x8_t x,
     const float32x4_t aminlo = vcvtq_f32_s32(vmovl_s16(vget_low_s16 (amin)));
     const float32x4_t aminhi = vcvtq_f32_s32(vmovl_s16(vget_high_s16(amin)));
 
+#if defined(NEON_APPROX_DIV)
+    float32x4_t rlo = vrecpeq_f32(amaxlo);
+    rlo = vmulq_f32(vrecpsq_f32(amaxlo, rlo), rlo);
+    float32x4_t rhi = vrecpeq_f32(amaxhi);
+    rhi = vmulq_f32(vrecpsq_f32(amaxhi, rhi), rhi);
+    const float32x4_t tlo = vmulq_f32(aminlo, rlo);
+    const float32x4_t thi = vmulq_f32(aminhi, rhi);
+#else
     const float32x4_t tlo = vdivq_f32(aminlo, amaxlo);
     const float32x4_t thi = vdivq_f32(aminhi, amaxhi);
+#endif
 
     const float32x4_t alo = vmulq_f32(tlo, vfmsq_f32(vT, vR, tlo));
     const float32x4_t ahi = vmulq_f32(thi, vfmsq_f32(vT, vR, thi));
