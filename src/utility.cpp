@@ -83,14 +83,13 @@ static inline void unpack_y12p_s16x8x2(const uint8x8x3_t &b, int16x8_t &p0, int1
     p1 = vshrq_n_s16(vshlq_n_s16(vreinterpretq_s16_u16(p1u), 5), 5);
 }
 
-static inline void approx_atan2x8(const int16x8_t &y, const int16x8_t &x,
+static inline void approx_atan2x8(const int16x8_t &y, const int16x8_t x,
                                   float32x4_t &thetalo, float32x4_t &thetahi) {
-    const float32x4_t vPI = vdupq_n_f32(M_PI);
-    const float32x4_t vHalfPI = vdupq_n_f32(M_PI * 0.5f);
-    const float32x4_t vQuadPI = vdupq_n_f32(M_PI * 0.25f);
-    const float32x4_t vR = vdupq_n_f32(0.273f);
+    const float32x4_t vPI = vdupq_n_f32(1.0f);
+    const float32x4_t vHalfPI = vdupq_n_f32(0.5f);
+    const float32x4_t vQuadPI = vdupq_n_f32(0.25f);
+    const float32x4_t vR = vdupq_n_f32(0.273 / M_PI);
     const float32x4_t vT = vaddq_f32(vQuadPI, vR);
-    const float32x4_t vZero = vdupq_n_f32(0.0f);
 
     const int16x8_t ay = vabsq_s16(y);
     const int16x8_t ax = vabsq_s16(x);
@@ -104,8 +103,8 @@ static inline void approx_atan2x8(const int16x8_t &y, const int16x8_t &x,
     const float32x4_t aminlo = vcvtq_f32_s32(vmovl_s16(vget_low_s16 (amin)));
     const float32x4_t aminhi = vcvtq_f32_s32(vmovl_s16(vget_high_s16(amin)));
 
-    const float32x4_t tlo = vbslq_f32(vceqq_f32(amaxlo, vZero), vZero, vdivq_f32(aminlo, amaxlo));
-    const float32x4_t thi = vbslq_f32(vceqq_f32(amaxhi, vZero), vZero, vdivq_f32(aminhi, amaxhi));
+    const float32x4_t tlo = vdivq_f32(aminlo, amaxlo);
+    const float32x4_t thi = vdivq_f32(aminhi, amaxhi);
 
     const float32x4_t alo = vmulq_f32(tlo, vfmsq_f32(vT, vR, tlo));
     const float32x4_t ahi = vmulq_f32(thi, vfmsq_f32(vT, vR, thi));
@@ -143,7 +142,7 @@ void compute_depth_from_y12p_neon(float *depth,
     static constexpr float C = 3e8;
     const float range = C / (2.0f * modfreq_hz) * 1000.0f;
     const float bias = 0.5f * range;
-    const float scale = bias / M_PI;
+    const float scale = bias;
     const float32x4_t vBias = vdupq_n_f32(bias);
     const float32x4_t vScale = vdupq_n_f32(scale);
 
