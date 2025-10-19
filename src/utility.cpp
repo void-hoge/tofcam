@@ -45,6 +45,7 @@ static inline float approx_atan2(const int16_t y, const int16_t x) {
     return theta;
 }
 
+template<bool EnableConfidence>
 void compute_depth_confidence(float *depth, float *confidence,
                               const int16_t *frame0, const int16_t *frame1,
                               const int16_t *frame2, const int16_t *frame3,
@@ -61,7 +62,9 @@ void compute_depth_confidence(float *depth, float *confidence,
         const int16_t I3 = frame3[i];
         const int16_t sin = I3 - I1;
         const int16_t cos = I0 - I2;
-        confidence[i] = 0.125 * std::sqrt(float(cos) * cos + float(sin) * sin);
+        if constexpr(EnableConfidence) {
+            confidence[i] = 0.125 * std::sqrt(float(cos) * cos + float(sin) * sin);
+        }
 #if 0
         const float phase = std::atan2(sin, cos);
 #else
@@ -70,6 +73,13 @@ void compute_depth_confidence(float *depth, float *confidence,
         depth[i] = (phase >= std::numbers::pi_v<float> || ((cos == 0) && (sin == 0))) ? 0.0f : phase * scale + bias;
     }
 }
+
+template void compute_depth_confidence<true>(
+    float*, float*, const int16_t*, const int16_t*, const int16_t*, const int16_t*,
+    const uint32_t, const float);
+template void compute_depth_confidence<false>(
+    float*, float*, const int16_t*, const int16_t*, const int16_t*, const int16_t*,
+    const uint32_t, const float);
 
 #if defined(__ARM_NEON)
 
@@ -147,6 +157,7 @@ static inline void approx_atan2x8(const int16x8_t &y, const int16x8_t x,
     thetahi = vbslq_f32(vorrq_u32(vcgtq_u32(bzerohi, vdupq_n_u32(0)), vcgeq_f32(thetahi, vPI)), vnegq_f32(vPI), thetahi);
 }
 
+template<bool EnableConfidence>
 void compute_depth_confidence_from_y12p_neon(
     float *depth, float* confidence,
     const void *frame0, const void *frame1, const void *frame2, const void *frame3,
@@ -188,20 +199,31 @@ void compute_depth_confidence_from_y12p_neon(
                 approx_atan2x8(sin, cos, depthlo.val[i], depthhi.val[i]);
                 depthlo.val[i] = vfmaq_f32(vBias, depthlo.val[i], vScale);
                 depthhi.val[i] = vfmaq_f32(vBias, depthhi.val[i], vScale);
-                const float32x4_t coslo = vcvtq_f32_s32(vmovl_s16(vget_low_s16 (cos)));
-                const float32x4_t coshi = vcvtq_f32_s32(vmovl_s16(vget_high_s16(cos)));
-                const float32x4_t sinlo = vcvtq_f32_s32(vmovl_s16(vget_low_s16 (sin)));
-                const float32x4_t sinhi = vcvtq_f32_s32(vmovl_s16(vget_high_s16(sin)));
-                amplo.val[i] = vsqrtq_f32(vaddq_f32(vmulq_f32(coslo, coslo), vmulq_f32(sinlo, sinlo)));
-                amphi.val[i] = vsqrtq_f32(vaddq_f32(vmulq_f32(coshi, coshi), vmulq_f32(sinhi, sinhi)));
+                if constexpr(EnableConfidence) {
+                    const float32x4_t coslo = vcvtq_f32_s32(vmovl_s16(vget_low_s16 (cos)));
+                    const float32x4_t coshi = vcvtq_f32_s32(vmovl_s16(vget_high_s16(cos)));
+                    const float32x4_t sinlo = vcvtq_f32_s32(vmovl_s16(vget_low_s16 (sin)));
+                    const float32x4_t sinhi = vcvtq_f32_s32(vmovl_s16(vget_high_s16(sin)));
+                    amplo.val[i] = vsqrtq_f32(vaddq_f32(vmulq_f32(coslo, coslo), vmulq_f32(sinlo, sinlo)));
+                    amphi.val[i] = vsqrtq_f32(vaddq_f32(vmulq_f32(coshi, coshi), vmulq_f32(sinhi, sinhi)));
+                }
             }
             vst2q_f32(depth + y * width + x + 0, depthlo);
             vst2q_f32(depth + y * width + x + 8, depthhi);
-            vst2q_f32(confidence + y * width + x + 0, amplo);
-            vst2q_f32(confidence + y * width + x + 8, amphi);
+            if constexpr(EnableConfidence) {
+                vst2q_f32(confidence + y * width + x + 0, amplo);
+                vst2q_f32(confidence + y * width + x + 8, amphi);
+            }
         }
     }
 }
+
+template void compute_depth_confidence_from_y12p_neon<true>(
+    float*, float*, const void*, const void*, const void*, const void*,
+    const uint32_t, const uint32_t, const uint32_t, const float);
+template void compute_depth_confidence_from_y12p_neon<false>(
+    float*, float*, const void*, const void*, const void*, const void*,
+    const uint32_t, const uint32_t, const uint32_t, const float);
 
 #endif
 

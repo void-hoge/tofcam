@@ -14,6 +14,7 @@ void unpack_y12p(
     const uint32_t width, const uint32_t height,
     const uint32_t bytesperline);
 
+template<bool EnableConfidence=true>
 void compute_depth_confidence(
     float *depth, float *confidence,
     const int16_t *frame0, const int16_t *frame1,
@@ -22,6 +23,7 @@ void compute_depth_confidence(
 
 #if defined(__ARM_NEON)
 
+template<bool EnableConfidence=true>
 void compute_depth_confidence_from_y12p_neon(
     float *depth, float *confidence,
     const void *frame0, const void *frame1, const void *frame2, const void *frame3,
