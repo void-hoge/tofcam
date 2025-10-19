@@ -22,10 +22,11 @@ void compute_depth_confidence(
 
 #if defined(__ARM_NEON)
 
-void compute_depth_from_y12p_neon(float *depth,
-                                  const void *frame0, const void *frame1, const void *frame2, const void *frame3,
-                                  const uint32_t width, const uint32_t height, const uint32_t bytesperline,
-                                  const float modfreq_hz);
+void compute_depth_confidence_from_y12p_neon(
+    float *depth, float *confidence,
+    const void *frame0, const void *frame1, const void *frame2, const void *frame3,
+    const uint32_t width, const uint32_t height, const uint32_t bytesperline,
+    const float modfreq_hz);
 
 #endif
 

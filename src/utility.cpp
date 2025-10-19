@@ -147,10 +147,12 @@ static inline void approx_atan2x8(const int16x8_t &y, const int16x8_t x,
     thetahi = vbslq_f32(vorrq_u32(vcgtq_u32(bzerohi, vdupq_n_u32(0)), vcgeq_f32(thetahi, vPI)), vnegq_f32(vPI), thetahi);
 }
 
-void compute_depth_from_y12p_neon(float *depth,
-                                  const void *frame0, const void *frame1, const void *frame2, const void *frame3,
-                                  const uint32_t width, const uint32_t height, const uint32_t bytesperline,
-                                  const float modfreq_hz) {
+void compute_depth_confidence_from_y12p_neon(
+    float *depth, float* confidence,
+    const void *frame0, const void *frame1, const void *frame2, const void *frame3,
+    const uint32_t width, const uint32_t height, const uint32_t bytesperline,
+    const float modfreq_hz) {
+
     static constexpr float C = 3e8;
     const float range = C / (2.0f * modfreq_hz) * 1000.0f;
     const float bias = 0.5f * range;
@@ -177,6 +179,8 @@ void compute_depth_from_y12p_neon(float *depth,
             unpack_y12p_s16x8x2(b3, p3[0], p3[1]);
             float32x4x2_t depthlo;
             float32x4x2_t depthhi;
+            float32x4x2_t amplo;
+            float32x4x2_t amphi;
             for (uint32_t i = 0; i < 2; i++) {
                 int16x8_t cos, sin;
                 sin = vsubq_s16(p3[i], p1[i]);
@@ -184,9 +188,17 @@ void compute_depth_from_y12p_neon(float *depth,
                 approx_atan2x8(sin, cos, depthlo.val[i], depthhi.val[i]);
                 depthlo.val[i] = vfmaq_f32(vBias, depthlo.val[i], vScale);
                 depthhi.val[i] = vfmaq_f32(vBias, depthhi.val[i], vScale);
+                const float32x4_t coslo = vcvtq_f32_s32(vmovl_s16(vget_low_s16 (cos)));
+                const float32x4_t coshi = vcvtq_f32_s32(vmovl_s16(vget_high_s16(cos)));
+                const float32x4_t sinlo = vcvtq_f32_s32(vmovl_s16(vget_low_s16 (sin)));
+                const float32x4_t sinhi = vcvtq_f32_s32(vmovl_s16(vget_high_s16(sin)));
+                amplo.val[i] = vsqrtq_f32(vaddq_f32(vmulq_f32(coslo, coslo), vmulq_f32(sinlo, sinlo)));
+                amphi.val[i] = vsqrtq_f32(vaddq_f32(vmulq_f32(coshi, coshi), vmulq_f32(sinhi, sinhi)));
             }
             vst2q_f32(depth + y * width + x + 0, depthlo);
             vst2q_f32(depth + y * width + x + 8, depthhi);
+            vst2q_f32(confidence + y * width + x + 0, amplo);
+            vst2q_f32(confidence + y * width + x + 8, amphi);
         }
     }
 }
