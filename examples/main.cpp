@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
     }
     const char* device = argv[1];
 
-    auto camera = tofcam::FakeCamera(device);
+    auto camera = tofcam::Camera(device, 8);
 
     const auto [width, height] = camera.get_size();
     const auto [sizeimage, bytesperline] = camera.get_bytes();
@@ -34,12 +34,6 @@ int main(int argc, char* argv[]) {
             const auto [data, index] = camera.dequeue();
             tofcam::unpack_y12p(unpacked[j].data(), data, width, height, bytesperline);
             camera.enqueue(index);
-            // for (int y = 0; y < height; y++) {
-            //     for (int x = 0; x < width; x++) {
-            //         printf("%d, ", unpacked[j][y * width + x]);
-            //     }
-            //     printf("\n");
-            // }
         }
 
         tofcam::compute_depth_amplitude(
