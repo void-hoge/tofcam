@@ -170,6 +170,7 @@ void compute_depth_confidence_from_y12p_neon(
     const float scale = bias;
     const float32x4_t vBias = vdupq_n_f32(bias);
     const float32x4_t vScale = vdupq_n_f32(scale);
+    const float32x4_t vConfScale = vdupq_n_f32(0.125);
 
     for (uint32_t y = 0; y < height; y++) {
         const uint8_t* line0 = static_cast<const uint8_t*>(frame0) + y * bytesperline;
@@ -204,8 +205,8 @@ void compute_depth_confidence_from_y12p_neon(
                     const float32x4_t coshi = vcvtq_f32_s32(vmovl_s16(vget_high_s16(cos)));
                     const float32x4_t sinlo = vcvtq_f32_s32(vmovl_s16(vget_low_s16 (sin)));
                     const float32x4_t sinhi = vcvtq_f32_s32(vmovl_s16(vget_high_s16(sin)));
-                    amplo.val[i] = vsqrtq_f32(vaddq_f32(vmulq_f32(coslo, coslo), vmulq_f32(sinlo, sinlo)));
-                    amphi.val[i] = vsqrtq_f32(vaddq_f32(vmulq_f32(coshi, coshi), vmulq_f32(sinhi, sinhi)));
+                    amplo.val[i] = vmulq_f32(vsqrtq_f32(vaddq_f32(vmulq_f32(coslo, coslo), vmulq_f32(sinlo, sinlo))), vConfScale);
+                    amphi.val[i] = vmulq_f32(vsqrtq_f32(vaddq_f32(vmulq_f32(coshi, coshi), vmulq_f32(sinhi, sinhi))), vConfScale);
                 }
             }
             vst2q_f32(depth + y * width + x + 0, depthlo);
