@@ -22,9 +22,7 @@ std::pair<void*, uint32_t> FakeCamera::dequeue() {
     return ret;
 }
 
-void FakeCamera::enqueue(const uint32_t index) {
-    // this->index = index >= (this->frames.size() - 1) ? 0 : index + 1;
-}
+void FakeCamera::enqueue(const uint32_t) {}
 
 std::pair<uint32_t, uint32_t> FakeCamera::get_size() const {
     return {WIDTH, HEIGHT};
