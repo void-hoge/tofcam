@@ -62,7 +62,7 @@ void compute_depth_amplitude(float *depth, float *amplitude, int16_t* raw,
         const int16_t sin = I3 - I1;
         const int16_t cos = I0 - I2;
         raw[i] = I0 + I1 + I2 + I3;
-        amplitude[i] = std::sqrt(float(cos) * cos + float(sin) * sin);
+        amplitude[i] = 0.125 * std::sqrt(float(cos) * cos + float(sin) * sin);
 #if 0
         const float phase = std::atan2(sin, cos);
 #else
