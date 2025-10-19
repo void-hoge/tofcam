@@ -9,7 +9,7 @@ class FakeCamera {
 public:
     ~FakeCamera() = default;
 
-    FakeCamera(const char* dir);
+    FakeCamera(const char* dir, const uint32_t max_frames);
 
     void stream_on();
 
@@ -37,7 +37,7 @@ private:
 
     void reset() noexcept;
 
-    void load_frames(const char* dir);
+    void load_frames(const char* dir, const uint32_t max_frames);
 };
 
 }
