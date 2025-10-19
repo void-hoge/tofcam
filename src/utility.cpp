@@ -45,10 +45,10 @@ static inline float approx_atan2(const int16_t y, const int16_t x) {
     return theta;
 }
 
-void compute_depth_amplitude(float *depth, float *amplitude, int16_t* raw,
-                             const int16_t *frame0, const int16_t *frame1,
-                             const int16_t *frame2, const int16_t *frame3,
-                             const uint32_t num_pixels, const float modfreq_hz) {
+void compute_depth_confidence(float *depth, float *confidence,
+                              const int16_t *frame0, const int16_t *frame1,
+                              const int16_t *frame2, const int16_t *frame3,
+                              const uint32_t num_pixels, const float modfreq_hz) {
     constexpr float C = 3e8; // speed of light (300,000,000 m/s)
     const float range = C / (2.0f * modfreq_hz) * 1000.0f;
     const float bias = 0.5f * range;
@@ -61,8 +61,7 @@ void compute_depth_amplitude(float *depth, float *amplitude, int16_t* raw,
         const int16_t I3 = frame3[i];
         const int16_t sin = I3 - I1;
         const int16_t cos = I0 - I2;
-        raw[i] = I0 + I1 + I2 + I3;
-        amplitude[i] = 0.125 * std::sqrt(float(cos) * cos + float(sin) * sin);
+        confidence[i] = 0.125 * std::sqrt(float(cos) * cos + float(sin) * sin);
 #if 0
         const float phase = std::atan2(sin, cos);
 #else
