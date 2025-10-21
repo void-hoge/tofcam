@@ -7,10 +7,9 @@ FakeCamera::FakeCamera(const char* dir, const uint32_t max_frames) {
     this->load_frames(dir, max_frames);
     if (this->frames.size() == 0) {
         throw std::runtime_error("no frames");
-    }else {
+    } else {
         fprintf(stderr, "%lu frames loaded.\n", this->frames.size());
     }
-    
 }
 
 void FakeCamera::stream_on() {}
@@ -56,4 +55,4 @@ void FakeCamera::load_frames(const char* dir, const uint32_t max_frames) {
     }
 }
 
-}
+} // namespace tofcam

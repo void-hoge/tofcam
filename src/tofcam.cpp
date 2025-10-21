@@ -1,8 +1,8 @@
-#include <tofcam.hpp>
+#include <linux/videodev2.h>
+#include <sys/mman.h>
 #include <syscall.hpp>
 #include <system_error>
-#include <sys/mman.h>
-#include <linux/videodev2.h>
+#include <tofcam.hpp>
 #include <vector>
 
 namespace tofcam {
@@ -151,4 +151,4 @@ void Camera::reset() noexcept {
     }
 }
 
-}
+} // namespace tofcam

@@ -1,12 +1,12 @@
-#include <tofcam.hpp>
-#include <fakecam.hpp>
-#include <utility.hpp>
-#include <cstdlib>
 #include <cstdio>
-#include <vector>
-#include <system_error>
-#include <iostream>
+#include <cstdlib>
+#include <fakecam.hpp>
 #include <fstream>
+#include <iostream>
+#include <system_error>
+#include <tofcam.hpp>
+#include <utility.hpp>
+#include <vector>
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -33,9 +33,8 @@ int main(int argc, char* argv[]) {
             frames[j] = camera.dequeue();
         }
         tofcam::compute_depth_confidence_from_y12p_neon(
-            depth.data(), amplitude.data(),
-            frames[0].first, frames[1].first, frames[2].first, frames[3].first,
-            width, height, bytesperline, 75'000'000);
+                depth.data(), amplitude.data(), frames[0].first, frames[1].first, frames[2].first, frames[3].first, width,
+                height, bytesperline, 75'000'000);
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 depth_ofst << depth[y * width + x];
@@ -49,7 +48,7 @@ int main(int argc, char* argv[]) {
             depth_ofst << "\n";
             amplitude_ofst << "\n";
         }
-        for (const auto& [data, index]: frames) {
+        for (const auto& [data, index] : frames) {
             camera.enqueue(index);
         }
     }

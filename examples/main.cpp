@@ -1,12 +1,12 @@
-#include <tofcam.hpp>
-#include <fakecam.hpp>
-#include <utility.hpp>
-#include <cstdlib>
 #include <cstdio>
-#include <vector>
-#include <system_error>
-#include <iostream>
+#include <cstdlib>
+#include <fakecam.hpp>
 #include <fstream>
+#include <iostream>
+#include <system_error>
+#include <tofcam.hpp>
+#include <utility.hpp>
+#include <vector>
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -36,9 +36,8 @@ int main(int argc, char* argv[]) {
         }
 
         tofcam::compute_depth_confidence(
-            depth.data(), amplitude.data(),
-            unpacked[0].data(), unpacked[1].data(), unpacked[2].data(), unpacked[3].data(),
-            width * height, 75'000'000);
+                depth.data(), amplitude.data(), unpacked[0].data(), unpacked[1].data(), unpacked[2].data(), unpacked[3].data(),
+                width * height, 75'000'000);
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 depth_ofst << depth[y * width + x];
