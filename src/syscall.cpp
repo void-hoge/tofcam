@@ -1,7 +1,7 @@
-#include <syscall.hpp>
 #include <cerrno>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <syscall.hpp>
 #include <unistd.h>
 
 namespace tofcam::syscall {
@@ -29,6 +29,5 @@ void* mmap(void* addr, size_t length, int prot, int flags, int fd, off_t offset)
 int munmap(void* addr, size_t length) {
     return ::munmap(addr, length);
 }
-
 
 } // namespace tofcam::syscall

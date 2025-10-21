@@ -1,9 +1,9 @@
+#include <chrono>
+#include <cstdio>
+#include <cstdlib>
 #include <tofcam.hpp>
 #include <utility.hpp>
 #include <vector>
-#include <cstdlib>
-#include <cstdio>
-#include <chrono>
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -28,9 +28,8 @@ int main(int argc, char* argv[]) {
             camera.enqueue(index);
         }
         tofcam::compute_depth_confidence(
-            depth.data(), amplitude.data(),
-            unpacked[0].data(), unpacked[1].data(), unpacked[2].data(), unpacked[3].data(),
-            width * height, 75'000'000);
+                depth.data(), amplitude.data(), unpacked[0].data(), unpacked[1].data(), unpacked[2].data(), unpacked[3].data(),
+                width * height, 75'000'000);
     }
     camera.stream_off();
 }
