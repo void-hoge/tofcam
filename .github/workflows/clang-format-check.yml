@@ -13,4 +13,4 @@ jobs:
         run: sudo apt-get install -y clang-format
 
       - name: Check code format
-        run: clang-format --dry-run --Werror eamples/*.cpp include/*.hpp src/*.cpp
+        run: clang-format --dry-run --Werror examples/*.cpp include/*.hpp src/*.cpp
