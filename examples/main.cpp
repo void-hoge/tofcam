@@ -22,7 +22,6 @@ int main(int argc, char* argv[]) {
     std::vector unpacked(4, std::vector<int16_t>(width * height, 0));
     std::vector<float> depth(width * height, 0.0f);
     std::vector<float> amplitude(width * height, 0.0f);
-    std::vector<int16_t> raw(width * height, 0);
 
     std::ofstream depth_ofst("tofcam_depth.csv");
     std::ofstream amplitude_ofst("tofcam_amplitude.csv");
@@ -36,15 +35,15 @@ int main(int argc, char* argv[]) {
             camera.enqueue(index);
         }
 
-        tofcam::compute_depth_amplitude(
-            depth.data(), amplitude.data(), raw.data(),
+        tofcam::compute_depth_confidence(
+            depth.data(), amplitude.data(),
             unpacked[0].data(), unpacked[1].data(), unpacked[2].data(), unpacked[3].data(),
             width * height, 75'000'000);
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 depth_ofst << depth[y * width + x];
                 amplitude_ofst << amplitude[y * width + x];
-                ofst << depth[y * width + x] << ", " << amplitude[y * width + x] << ", " << raw[y * width + x] << "\n";
+                ofst << depth[y * width + x] << ", " << amplitude[y * width + x] << "\n";
                 if (x < width - 1) {
                     depth_ofst << ", ";
                     amplitude_ofst << ", ";

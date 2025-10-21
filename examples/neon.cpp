@@ -20,8 +20,10 @@ int main(int argc, char* argv[]) {
     const auto [width, height] = camera.get_size();
     const auto [sizeimage, bytesperline] = camera.get_bytes();
     std::vector<float> depth(width * height, 0.0f);
+    std::vector<float> amplitude(width * height, 0.0f);
 
     std::ofstream depth_ofst("neon_depth.csv");
+    std::ofstream amplitude_ofst("neon_amplitude.csv");
     std::ofstream ofst("neon.csv");
 
     camera.stream_on();
@@ -30,19 +32,22 @@ int main(int argc, char* argv[]) {
         for (int j = 0; j < 4; j++) {
             frames[j] = camera.dequeue();
         }
-        tofcam::compute_depth_from_y12p_neon(
-            depth.data(),
+        tofcam::compute_depth_confidence_from_y12p_neon(
+            depth.data(), amplitude.data(),
             frames[0].first, frames[1].first, frames[2].first, frames[3].first,
             width, height, bytesperline, 75'000'000);
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 depth_ofst << depth[y * width + x];
+                amplitude_ofst << amplitude[y * width + x];
                 ofst << depth[y * width + x] << "\n";
                 if (x < width - 1) {
                     depth_ofst << ", ";
+                    amplitude_ofst << ", ";
                 }
             }
             depth_ofst << "\n";
+            amplitude_ofst << "\n";
         }
         for (const auto& [data, index]: frames) {
             camera.enqueue(index);

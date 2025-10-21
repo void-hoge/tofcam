@@ -45,10 +45,11 @@ static inline float approx_atan2(const int16_t y, const int16_t x) {
     return theta;
 }
 
-void compute_depth_amplitude(float *depth, float *amplitude, int16_t* raw,
-                             const int16_t *frame0, const int16_t *frame1,
-                             const int16_t *frame2, const int16_t *frame3,
-                             const uint32_t num_pixels, const float modfreq_hz) {
+template<bool EnableConfidence>
+void compute_depth_confidence(float *depth, float *confidence,
+                              const int16_t *frame0, const int16_t *frame1,
+                              const int16_t *frame2, const int16_t *frame3,
+                              const uint32_t num_pixels, const float modfreq_hz) {
     constexpr float C = 3e8; // speed of light (300,000,000 m/s)
     const float range = C / (2.0f * modfreq_hz) * 1000.0f;
     const float bias = 0.5f * range;
@@ -61,8 +62,9 @@ void compute_depth_amplitude(float *depth, float *amplitude, int16_t* raw,
         const int16_t I3 = frame3[i];
         const int16_t sin = I3 - I1;
         const int16_t cos = I0 - I2;
-        raw[i] = I0 + I1 + I2 + I3;
-        amplitude[i] = std::sqrt(float(cos) * cos + float(sin) * sin);
+        if constexpr(EnableConfidence) {
+            confidence[i] = 0.125 * std::sqrt(float(cos) * cos + float(sin) * sin);
+        }
 #if 0
         const float phase = std::atan2(sin, cos);
 #else
@@ -71,6 +73,13 @@ void compute_depth_amplitude(float *depth, float *amplitude, int16_t* raw,
         depth[i] = (phase >= std::numbers::pi_v<float> || ((cos == 0) && (sin == 0))) ? 0.0f : phase * scale + bias;
     }
 }
+
+template void compute_depth_confidence<true>(
+    float*, float*, const int16_t*, const int16_t*, const int16_t*, const int16_t*,
+    const uint32_t, const float);
+template void compute_depth_confidence<false>(
+    float*, float*, const int16_t*, const int16_t*, const int16_t*, const int16_t*,
+    const uint32_t, const float);
 
 #if defined(__ARM_NEON)
 
@@ -148,16 +157,20 @@ static inline void approx_atan2x8(const int16x8_t &y, const int16x8_t x,
     thetahi = vbslq_f32(vorrq_u32(vcgtq_u32(bzerohi, vdupq_n_u32(0)), vcgeq_f32(thetahi, vPI)), vnegq_f32(vPI), thetahi);
 }
 
-void compute_depth_from_y12p_neon(float *depth,
-                                  const void *frame0, const void *frame1, const void *frame2, const void *frame3,
-                                  const uint32_t width, const uint32_t height, const uint32_t bytesperline,
-                                  const float modfreq_hz) {
+template<bool EnableConfidence>
+void compute_depth_confidence_from_y12p_neon(
+    float *depth, float* confidence,
+    const void *frame0, const void *frame1, const void *frame2, const void *frame3,
+    const uint32_t width, const uint32_t height, const uint32_t bytesperline,
+    const float modfreq_hz) {
+
     static constexpr float C = 3e8;
     const float range = C / (2.0f * modfreq_hz) * 1000.0f;
     const float bias = 0.5f * range;
     const float scale = bias;
     const float32x4_t vBias = vdupq_n_f32(bias);
     const float32x4_t vScale = vdupq_n_f32(scale);
+    const float32x4_t vConfScale = vdupq_n_f32(0.125);
 
     for (uint32_t y = 0; y < height; y++) {
         const uint8_t* line0 = static_cast<const uint8_t*>(frame0) + y * bytesperline;
@@ -178,6 +191,8 @@ void compute_depth_from_y12p_neon(float *depth,
             unpack_y12p_s16x8x2(b3, p3[0], p3[1]);
             float32x4x2_t depthlo;
             float32x4x2_t depthhi;
+            float32x4x2_t amplo;
+            float32x4x2_t amphi;
             for (uint32_t i = 0; i < 2; i++) {
                 int16x8_t cos, sin;
                 sin = vsubq_s16(p3[i], p1[i]);
@@ -185,12 +200,31 @@ void compute_depth_from_y12p_neon(float *depth,
                 approx_atan2x8(sin, cos, depthlo.val[i], depthhi.val[i]);
                 depthlo.val[i] = vfmaq_f32(vBias, depthlo.val[i], vScale);
                 depthhi.val[i] = vfmaq_f32(vBias, depthhi.val[i], vScale);
+                if constexpr(EnableConfidence) {
+                    const float32x4_t coslo = vcvtq_f32_s32(vmovl_s16(vget_low_s16 (cos)));
+                    const float32x4_t coshi = vcvtq_f32_s32(vmovl_s16(vget_high_s16(cos)));
+                    const float32x4_t sinlo = vcvtq_f32_s32(vmovl_s16(vget_low_s16 (sin)));
+                    const float32x4_t sinhi = vcvtq_f32_s32(vmovl_s16(vget_high_s16(sin)));
+                    amplo.val[i] = vmulq_f32(vsqrtq_f32(vaddq_f32(vmulq_f32(coslo, coslo), vmulq_f32(sinlo, sinlo))), vConfScale);
+                    amphi.val[i] = vmulq_f32(vsqrtq_f32(vaddq_f32(vmulq_f32(coshi, coshi), vmulq_f32(sinhi, sinhi))), vConfScale);
+                }
             }
             vst2q_f32(depth + y * width + x + 0, depthlo);
             vst2q_f32(depth + y * width + x + 8, depthhi);
+            if constexpr(EnableConfidence) {
+                vst2q_f32(confidence + y * width + x + 0, amplo);
+                vst2q_f32(confidence + y * width + x + 8, amphi);
+            }
         }
     }
 }
+
+template void compute_depth_confidence_from_y12p_neon<true>(
+    float*, float*, const void*, const void*, const void*, const void*,
+    const uint32_t, const uint32_t, const uint32_t, const float);
+template void compute_depth_confidence_from_y12p_neon<false>(
+    float*, float*, const void*, const void*, const void*, const void*,
+    const uint32_t, const uint32_t, const uint32_t, const float);
 
 #endif
 
