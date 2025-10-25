@@ -7,86 +7,87 @@
 
 namespace tofcam {
 
-Camera::~Camera() {
-    this->reset();
-}
-
 Camera::Camera(const char* device, const uint32_t num_buffers, const MemType memtype)
     : MemoryType(memtype == MemType::MMAP ? V4L2_MEMORY_MMAP : V4L2_MEMORY_DMABUF) {
     this->fd = syscall::open(device, O_RDWR, 0);
     if (this->fd < 0) {
-        this->reset();
         throw std::system_error(errno, std::generic_category(), "Failed to open camera device.");
     }
-    { // check capability
-        struct v4l2_capability cap = {};
-        if (syscall::ioctl(this->fd, VIDIOC_QUERYCAP, &cap) < 0) {
-            this->reset();
-            throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_QUERYCAP failed.");
+    try {
+        { // check capability
+            struct v4l2_capability cap = {};
+            if (syscall::ioctl(this->fd, VIDIOC_QUERYCAP, &cap) < 0) {
+                throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_QUERYCAP failed.");
+            }
+            if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
+                throw std::runtime_error("Device does not support video capture.");
+            }
+            if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
+                throw std::runtime_error("Device does not support video streaming.");
+            }
         }
-        if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
-            this->reset();
-            throw std::runtime_error("Device does not support video capture.");
+        { // set format
+            struct v4l2_format fmt = {};
+            fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            fmt.fmt.pix.field = V4L2_FIELD_NONE;
+            fmt.fmt.pix.pixelformat = v4l2_fourcc('Y', '1', '2', 'P');
+            fmt.fmt.pix.width = WIDTH;
+            fmt.fmt.pix.height = HEIGHT;
+            if (syscall::ioctl(this->fd, VIDIOC_S_FMT, &fmt) < 0) {
+                throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_S_FMT failed.");
+            }
+            this->sizeimage = fmt.fmt.pix.sizeimage;
+            this->bytesperline = fmt.fmt.pix.bytesperline;
+            if (fmt.fmt.pix.width != WIDTH) {
+                throw std::runtime_error("Unsupported width.");
+            }
+            if (fmt.fmt.pix.height != HEIGHT) {
+                throw std::runtime_error("Unsupported height.");
+            }
+            if (this->sizeimage == 0) {
+                throw std::runtime_error("Sizeimage is zero, unsupported format?");
+            }
+            if (this->bytesperline == 0) {
+                throw std::runtime_error("Bytesperline is zero, unsupported format?");
+            }
+            fprintf(stderr, "sizeimage: %d, bytesperline: %d\n", this->sizeimage, this->bytesperline);
         }
-        if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
-            this->reset();
-            throw std::runtime_error("Device does not support video streaming.");
+        { // setup mmap buffers
+            struct v4l2_requestbuffers req = {};
+            req.count = num_buffers;
+            req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            req.memory = this->MemoryType;
+            if (syscall::ioctl(this->fd, VIDIOC_REQBUFS, &req) < 0) {
+                throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_REQBUFS failed.");
+            }
+            if (req.count != num_buffers) {
+                throw std::runtime_error("Buffer request failed.");
+            }
         }
+        // allocate buffers
+        if (this->MemoryType == V4L2_MEMORY_MMAP) {
+            this->buffers = std::make_unique<MmapBufferPool>(this->fd, num_buffers);
+        } else {
+            this->buffers = std::make_unique<DmaBufferPool>("/dev/dma_heap/linux,cma", num_buffers, this->sizeimage);
+        }
+        { // enqueue all buffers
+            for (uint32_t i = 0; i < num_buffers; i++) {
+                this->enqueue(i);
+            }
+        }
+    } catch (...) {
+        if (this->fd >= 0) {
+            syscall::close(this->fd);
+            this->fd = -1;
+        }
+        throw;
     }
-    { // set format
-        struct v4l2_format fmt = {};
-        fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        fmt.fmt.pix.field = V4L2_FIELD_NONE;
-        fmt.fmt.pix.pixelformat = v4l2_fourcc('Y', '1', '2', 'P');
-        fmt.fmt.pix.width = WIDTH;
-        fmt.fmt.pix.height = HEIGHT;
-        if (syscall::ioctl(this->fd, VIDIOC_S_FMT, &fmt) < 0) {
-            this->reset();
-            throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_S_FMT failed.");
-        }
-        this->sizeimage = fmt.fmt.pix.sizeimage;
-        this->bytesperline = fmt.fmt.pix.bytesperline;
-        if (fmt.fmt.pix.width != WIDTH) {
-            this->reset();
-            throw std::runtime_error("Unsupported width.");
-        }
-        if (fmt.fmt.pix.height != HEIGHT) {
-            this->reset();
-            throw std::runtime_error("Unsupported height.");
-        }
-        if (this->sizeimage == 0) {
-            this->reset();
-            throw std::runtime_error("Sizeimage is zero, unsupported format?");
-        }
-        if (this->bytesperline == 0) {
-            this->reset();
-            throw std::runtime_error("Bytesperline is zero, unsupported format?");
-        }
-        fprintf(stderr, "sizeimage: %d, bytesperline: %d\n", this->sizeimage, this->bytesperline);
-    }
-    { // setup mmap buffers
-        struct v4l2_requestbuffers req = {};
-        req.count = num_buffers;
-        req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        req.memory = this->MemoryType;
-        if (syscall::ioctl(this->fd, VIDIOC_REQBUFS, &req) < 0) {
-            this->reset();
-            throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_REQBUFS failed.");
-        }
-        if (req.count != num_buffers) {
-            this->reset();
-            throw std::runtime_error("Buffer request failed.");
-        }
-    }
-    if (this->MemoryType == V4L2_MEMORY_MMAP) {
-        this->buffers = std::make_unique<MmapBufferPool>(this->fd, num_buffers);
-    } else {
-        this->buffers = std::make_unique<DmaBufferPool>("/dev/dma_heap/linux,cma", num_buffers, this->sizeimage);
-    }
-    { // enqueue all buffers
-        for (uint32_t i = 0; i < num_buffers; i++) {
-            this->enqueue(i);
-        }
+}
+
+Camera::~Camera() {
+    if (this->fd >= 0) {
+        syscall::close(this->fd);
+        this->fd = -1;
     }
 }
 
@@ -131,13 +132,6 @@ std::pair<uint32_t, uint32_t> Camera::get_size() const {
 
 std::pair<uint32_t, uint32_t> Camera::get_bytes() const {
     return {this->sizeimage, this->bytesperline};
-}
-
-void Camera::reset() noexcept {
-    if (this->fd != -1) {
-        syscall::close(this->fd);
-        this->fd = -1;
-    }
 }
 
 } // namespace tofcam

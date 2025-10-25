@@ -15,9 +15,8 @@ enum class MemType {
 
 class Camera {
   public:
-    ~Camera();
-
     Camera(const char* device, const uint32_t num_buffers, const MemType memtype = MemType::MMAP);
+    ~Camera() noexcept;
 
     void stream_on();
 
@@ -44,8 +43,6 @@ class Camera {
     uint32_t bytesperline = 0;
 
     std::unique_ptr<BufferPool> buffers;
-
-    void reset() noexcept;
 };
 
 } // namespace tofcam
