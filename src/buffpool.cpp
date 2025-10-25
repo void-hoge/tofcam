@@ -159,7 +159,7 @@ DmaBufferPool& DmaBufferPool::operator=(DmaBufferPool&& other) noexcept {
 
 void* DmaBufferPool::sync_start(const uint32_t index) {
     struct dma_buf_sync flags = {};
-    flags.flags = DMA_BUF_SYNC_START | DMA_BUF_SYNC_RW;
+    flags.flags = DMA_BUF_SYNC_START | DMA_BUF_SYNC_READ;
     const auto& [addr, len, bfd] = this->buffers[index];
     if (syscall::ioctl(bfd, DMA_BUF_IOCTL_SYNC, &flags) < 0) {
         throw std::system_error(errno, std::generic_category(), "ioctl DMA_BUF_IOCTL_SYNC failed.");
@@ -169,7 +169,7 @@ void* DmaBufferPool::sync_start(const uint32_t index) {
 
 int DmaBufferPool::sync_end(const uint32_t index) {
     struct dma_buf_sync flags = {};
-    flags.flags = DMA_BUF_SYNC_END | DMA_BUF_SYNC_RW;
+    flags.flags = DMA_BUF_SYNC_END | DMA_BUF_SYNC_READ;
     const auto& [addr, len, bfd] = this->buffers[index];
     if (syscall::ioctl(bfd, DMA_BUF_IOCTL_SYNC, &flags) < 0) {
         throw std::system_error(errno, std::generic_category(), "ioctl DMA_BUF_IOCTL_SYNC failed.");
