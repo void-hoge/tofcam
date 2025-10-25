@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
     const char* dir = argv[1];
-    constexpr uint32_t ITER = 30 * 100;
+    constexpr uint32_t ITER = 30 * 1000;
     auto camera = tofcam::FakeCamera(dir, 8);
     const auto [width, height] = camera.get_size();
     const auto [sizeimage, bytesperline] = camera.get_bytes();
@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
             tofcam::unpack_y12p(unpacked[j].data(), data, width, height, bytesperline);
             camera.enqueue(index);
         }
-        tofcam::compute_depth_confidence<true>(
+        tofcam::compute_depth_confidence<false>(
                 depth.data(), amplitude.data(), unpacked[0].data(), unpacked[1].data(), unpacked[2].data(), unpacked[3].data(),
                 width * height, 75'000'000);
     }
