@@ -50,7 +50,6 @@ Camera::Camera(const char* device, const uint32_t num_buffers, const MemType mem
             if (this->bytesperline == 0) {
                 throw std::runtime_error("Bytesperline is zero, unsupported format?");
             }
-            fprintf(stderr, "sizeimage: %d, bytesperline: %d\n", this->sizeimage, this->bytesperline);
         }
         { // setup mmap buffers
             struct v4l2_requestbuffers req = {};

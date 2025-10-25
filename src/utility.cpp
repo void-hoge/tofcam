@@ -93,7 +93,7 @@ static inline void unpack_y12p_s16x8x2(const uint8x8x3_t& b, int16x8_t& p0, int1
     p1 = vshrq_n_s16(vshlq_n_s16(vreinterpretq_s16_u16(p1u), 5), 5);
 }
 
-static inline void approx_atan2x8(const int16x8_t& y, const int16x8_t x, float32x4_t& thetalo, float32x4_t& thetahi) {
+static inline void approx_atan2x8(const int16x8_t& y, const int16x8_t& x, float32x4_t& thetalo, float32x4_t& thetahi) {
     const float32x4_t vPI = vdupq_n_f32(1.0f);
     const float32x4_t vHalfPI = vdupq_n_f32(0.5f);
     const float32x4_t vQuadPI = vdupq_n_f32(0.25f);

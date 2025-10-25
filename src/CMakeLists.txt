@@ -15,5 +15,5 @@ target_compile_features(tofcam
 )
 
 target_compile_options(tofcam
-    PRIVATE -Wall -Wextra -O3 -mtune=native -march=native
+    PRIVATE -Wall -Wextra -O3 -mtune=native -march=native -ffast-math -fno-math-errno -funroll-loops
 )

@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
     const char* device = argv[1];
     constexpr uint32_t ITER = 60;
 
-    auto camera = tofcam::Camera(device, 8, tofcam::MemType::MMAP);
+    auto camera = tofcam::Camera(device, 8, tofcam::MemType::DMABUF);
 
     const auto [width, height] = camera.get_size();
     const auto [sizeimage, bytesperline] = camera.get_bytes();
