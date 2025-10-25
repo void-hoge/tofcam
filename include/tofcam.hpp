@@ -10,7 +10,7 @@ namespace tofcam {
 
 enum class MemType {
     MMAP,
-    DMA,
+    DMABUF,
 };
 
 class Camera {
