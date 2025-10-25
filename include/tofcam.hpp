@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <utility>
 #include <vector>
+#include <memory>
+#include <buffpool.hpp>
 
 namespace tofcam {
 
@@ -10,7 +12,7 @@ class Camera {
   public:
     ~Camera();
 
-    Camera(const char* device, const uint32_t buffer_count);
+    Camera(const char* device, const uint32_t num_buffers);
 
     void stream_on();
 
@@ -33,7 +35,8 @@ class Camera {
     int fd = -1;
     uint32_t sizeimage = 0;
     uint32_t bytesperline = 0;
-    std::vector<std::pair<void*, uint32_t>> buffers;
+
+    std::unique_ptr<MmapBufferPool> buffers;
 
     void reset() noexcept;
 };

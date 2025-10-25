@@ -77,24 +77,7 @@ Camera::Camera(const char* device, const uint32_t num_buffers) {
             throw std::runtime_error("Buffer request failed.");
         }
     }
-    { // mmap buffers
-        buffers.reserve(num_buffers);
-        for (uint32_t i = 0; i < num_buffers; i++) {
-            struct v4l2_buffer buf = {};
-            buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-            buf.memory = V4L2_MEMORY_MMAP;
-            buf.index = i;
-            if (syscall::ioctl(this->fd, VIDIOC_QUERYBUF, &buf) < 0) {
-                this->reset();
-                throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_QUERYBUF failed.");
-            }
-            auto data = syscall::mmap(NULL, buf.length, PROT_READ | PROT_WRITE, MAP_SHARED, this->fd, buf.m.offset);
-            if (data == MAP_FAILED) {
-                throw std::system_error(errno, std::generic_category(), "mmap failed.");
-            }
-            this->buffers.emplace_back(data, buf.length);
-        }
-    }
+    this->buffers = std::make_unique<MmapBufferPool>(this->fd, num_buffers);
     { // enqueue all buffers
         for (uint32_t i = 0; i < num_buffers; i++) {
             this->enqueue(i);
@@ -123,10 +106,11 @@ std::pair<void*, uint32_t> Camera::dequeue() {
     if (syscall::ioctl(this->fd, VIDIOC_DQBUF, &buf) < 0) {
         throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_DQBUF failed.");
     }
-    return {buffers[buf.index].first, buf.index};
+    return {this->buffers->sync_start(buf.index), buf.index};
 }
 
 void Camera::enqueue(const uint32_t index) {
+    this->buffers->sync_end(index);
     struct v4l2_buffer buf = {};
     buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     buf.memory = V4L2_MEMORY_MMAP;
