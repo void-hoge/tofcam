@@ -20,6 +20,8 @@ class Camera {
 
     Camera(Camera&& other) noexcept;
     Camera& operator=(Camera&& other) noexcept;
+    Camera(const Camera&) = delete;
+    Camera& operator=(const Camera&) = delete;
 
     void stream_on();
 
