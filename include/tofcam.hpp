@@ -18,6 +18,9 @@ class Camera {
     Camera(const char* device, const uint32_t num_buffers, const MemType memtype = MemType::MMAP);
     ~Camera() noexcept;
 
+    Camera(Camera&& other) noexcept;
+    Camera& operator=(Camera&& other) noexcept;
+
     void stream_on();
 
     void stream_off();
@@ -36,8 +39,7 @@ class Camera {
     static constexpr uint32_t WIDTH = 240;
     static constexpr uint32_t HEIGHT = 180;
 
-    const uint32_t MemoryType;
-
+    uint32_t MemoryType;
     int fd = -1;
     uint32_t sizeimage = 0;
     uint32_t bytesperline = 0;

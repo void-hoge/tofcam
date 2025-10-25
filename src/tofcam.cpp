@@ -84,11 +84,29 @@ Camera::Camera(const char* device, const uint32_t num_buffers, const MemType mem
     }
 }
 
-Camera::~Camera() {
+Camera::~Camera() noexcept {
     if (this->fd >= 0) {
         syscall::close(this->fd);
         this->fd = -1;
     }
+}
+
+Camera::Camera(Camera&& other) noexcept
+    : MemoryType(other.MemoryType), fd(other.fd), imagesize(other.imagesize), bytesperline(other.bytesperline),
+      buffers(std::move(other.buffers)) {}
+
+Camera& Camera::operator=(Camera&& other) noexcept {
+    if (this != &other) {
+        this->MemoryType = other.MemoryType;
+        if (this->fd >= 0) {
+            syscall::close(this->fd);
+        }
+        this->fd = other.fd;
+        this->sizeimage = other.sizeimage;
+        this->bytesperline = other.bytesperline;
+        this->buffers = std::move(other.buffers);
+    }
+    return *this;
 }
 
 void Camera::stream_on() {
