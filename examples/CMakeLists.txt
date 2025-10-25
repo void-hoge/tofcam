@@ -18,6 +18,11 @@ target_link_libraries(neon_capture
     PRIVATE tofcam
 )
 
+add_executable(neon_loadtest neon_loadtest.cpp)
+target_link_libraries(neon_loadtest
+    PRIVATE tofcam
+)
+
 add_executable(neon_benchmark neon_benchmark.cpp)
 target_link_libraries(neon_benchmark
     PRIVATE tofcam
