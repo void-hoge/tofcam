@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
         }
         depth.emplace_back(width * height, 0.0f);
         amplitude.emplace_back(width * height, 0.0f);
-        tofcam::compute_depth_confidence_from_y12p_neon<false>(
+        tofcam::compute_depth_confidence_from_y12p_neon<true>(
                 depth.back().data(), amplitude.back().data(), frames[0].first, frames[1].first, frames[2].first,
                 frames[3].first, width, height, bytesperline, 75'000'000);
         for (const auto& [data, index] : frames) {

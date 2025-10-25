@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
         }
         depth.emplace_back(width * height, 0.0f);
         amplitude.emplace_back(width * height, 0.0f);
-        tofcam::compute_depth_confidence(
+        tofcam::compute_depth_confidence<true>(
                 depth.back().data(), amplitude.back().data(), unpacked[0].data(), unpacked[1].data(), unpacked[2].data(),
                 unpacked[3].data(), width * height, 75'000'000);
     }
