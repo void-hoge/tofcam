@@ -92,7 +92,7 @@ Camera::~Camera() noexcept {
 }
 
 Camera::Camera(Camera&& other) noexcept
-    : MemoryType(other.MemoryType), fd(other.fd), imagesize(other.imagesize), bytesperline(other.bytesperline),
+    : MemoryType(other.MemoryType), fd(other.fd), sizeimage(other.sizeimage), bytesperline(other.bytesperline),
       buffers(std::move(other.buffers)) {}
 
 Camera& Camera::operator=(Camera&& other) noexcept {
@@ -139,6 +139,7 @@ void Camera::enqueue(const uint32_t index) {
     buf.memory = this->MemoryType;
     buf.index = index;
     buf.m.fd = this->buffers->sync_end(index);
+    buf.length = this->sizeimage;
     if (syscall::ioctl(this->fd, VIDIOC_QBUF, &buf) < 0) {
         throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_QBUF failed.");
     }
