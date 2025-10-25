@@ -1,4 +1,4 @@
-add_executable(capture main.cpp)
+add_executable(capture capture.cpp)
 target_link_libraries(capture
     PRIVATE tofcam
 )
