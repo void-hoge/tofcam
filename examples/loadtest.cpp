@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
     std::vector<float> amplitude(width * height, 0.0f);
 
     camera.stream_on();
-    for (int i = 0; i < 30 * 100; i++) {
+    for (int i = 0; i < 30 * 10; i++) {
         for (int j = 0; j < 4; j++) {
             const auto [data, index] = camera.dequeue();
             tofcam::unpack_y12p(unpacked[j].data(), data, width, height, bytesperline);

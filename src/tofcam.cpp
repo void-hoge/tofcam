@@ -11,7 +11,8 @@ Camera::~Camera() {
     this->reset();
 }
 
-Camera::Camera(const char* device, const uint32_t num_buffers) {
+Camera::Camera(const char* device, const uint32_t num_buffers, const MemType memtype)
+    : MemoryType(memtype == MemType::MMAP ? V4L2_MEMORY_MMAP : V4L2_MEMORY_DMABUF) {
     this->fd = syscall::open(device, O_RDWR, 0);
     if (this->fd < 0) {
         this->reset();
@@ -67,7 +68,7 @@ Camera::Camera(const char* device, const uint32_t num_buffers) {
         struct v4l2_requestbuffers req = {};
         req.count = num_buffers;
         req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        req.memory = V4L2_MEMORY_MMAP;
+        req.memory = this->MemoryType;
         if (syscall::ioctl(this->fd, VIDIOC_REQBUFS, &req) < 0) {
             this->reset();
             throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_REQBUFS failed.");
@@ -77,7 +78,11 @@ Camera::Camera(const char* device, const uint32_t num_buffers) {
             throw std::runtime_error("Buffer request failed.");
         }
     }
-    this->buffers = std::make_unique<MmapBufferPool>(this->fd, num_buffers);
+    if (this->MemoryType == V4L2_MEMORY_MMAP) {
+        this->buffers = std::make_unique<MmapBufferPool>(this->fd, num_buffers);
+    } else {
+        this->buffers = std::make_unique<DmaBufferPool>("/dev/dma_heap/linux,cma", num_buffers, this->sizeimage);
+    }
     { // enqueue all buffers
         for (uint32_t i = 0; i < num_buffers; i++) {
             this->enqueue(i);
@@ -102,7 +107,7 @@ void Camera::stream_off() {
 std::pair<void*, uint32_t> Camera::dequeue() {
     struct v4l2_buffer buf = {};
     buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    buf.memory = V4L2_MEMORY_MMAP;
+    buf.memory = this->MemoryType;
     if (syscall::ioctl(this->fd, VIDIOC_DQBUF, &buf) < 0) {
         throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_DQBUF failed.");
     }
@@ -110,11 +115,11 @@ std::pair<void*, uint32_t> Camera::dequeue() {
 }
 
 void Camera::enqueue(const uint32_t index) {
-    this->buffers->sync_end(index);
     struct v4l2_buffer buf = {};
     buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    buf.memory = V4L2_MEMORY_MMAP;
+    buf.memory = this->MemoryType;
     buf.index = index;
+    buf.m.fd = this->buffers->sync_end(index);
     if (syscall::ioctl(this->fd, VIDIOC_QBUF, &buf) < 0) {
         throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_QBUF failed.");
     }

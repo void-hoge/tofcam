@@ -1,11 +1,11 @@
 #include <buffpool.hpp>
-#include <syscall.hpp>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <linux/dma-heap.h>
 #include <linux/dma-buf.h>
+#include <linux/dma-heap.h>
 #include <linux/videodev2.h>
+#include <sys/mman.h>
+#include <syscall.hpp>
 #include <system_error>
+#include <unistd.h>
 
 namespace tofcam {
 
@@ -30,7 +30,9 @@ void* MmapBufferPool::sync_start(const uint32_t index) {
     return this->buffers[index].first;
 }
 
-void MmapBufferPool::sync_end(const uint32_t) {}
+int MmapBufferPool::sync_end(const uint32_t) {
+    return 0;
+}
 
 DmaBufferPool::DmaBufferPool(const char* allocator, const uint32_t num_buffers, const uint32_t length) {
     this->fd = syscall::open(allocator, O_RDWR | O_CLOEXEC, 0);
@@ -39,7 +41,7 @@ DmaBufferPool::DmaBufferPool(const char* allocator, const uint32_t num_buffers, 
     }
     for (uint32_t i = 0; i < num_buffers; i++) {
         struct dma_heap_allocation_data alloc = {};
-        alloc.len =  length;
+        alloc.len = length;
         alloc.fd = 0;
         alloc.fd_flags = O_RDWR | O_CLOEXEC;
         alloc.heap_flags = 0;
@@ -64,13 +66,14 @@ void* DmaBufferPool::sync_start(const uint32_t index) {
     return addr;
 }
 
-void DmaBufferPool::sync_end(const uint32_t index) {
+int DmaBufferPool::sync_end(const uint32_t index) {
     struct dma_buf_sync flags = {};
     flags.flags = DMA_BUF_SYNC_END | DMA_BUF_SYNC_RW;
     const auto& [addr, length, fd] = this->buffers[index];
     if (syscall::ioctl(fd, DMA_BUF_IOCTL_SYNC, &flags) < 0) {
         throw std::system_error(errno, std::generic_category(), "ioctl DMA_BUF_IOCTL_SYNC failed.");
     }
+    return fd;
 }
 
-}
+} // namespace tofcam
