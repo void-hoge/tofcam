@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
     }
     const char* device = argv[1];
 
-    auto camera = tofcam::Camera(device, 8);
+    auto camera = tofcam::Camera(device, 8, tofcam::MemType::MMAP);
 
     const auto [width, height] = camera.get_size();
     const auto [sizeimage, bytesperline] = camera.get_bytes();
@@ -21,13 +21,13 @@ int main(int argc, char* argv[]) {
     std::vector<float> amplitude(width * height, 0.0f);
 
     camera.stream_on();
-    for (int i = 0; i < 30 * 100; i++) {
+    for (int i = 0; i < 30 * 10; i++) {
         for (int j = 0; j < 4; j++) {
             const auto [data, index] = camera.dequeue();
             tofcam::unpack_y12p(unpacked[j].data(), data, width, height, bytesperline);
             camera.enqueue(index);
         }
-        tofcam::compute_depth_confidence(
+        tofcam::compute_depth_confidence<true>(
                 depth.data(), amplitude.data(), unpacked[0].data(), unpacked[1].data(), unpacked[2].data(), unpacked[3].data(),
                 width * height, 75'000'000);
     }

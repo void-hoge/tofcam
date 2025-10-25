@@ -1,16 +1,25 @@
 #pragma once
 
+#include <buffpool.hpp>
 #include <cstdint>
+#include <memory>
 #include <utility>
 #include <vector>
 
 namespace tofcam {
 
+enum class MemType {
+    MMAP,
+    DMABUF,
+};
+
 class Camera {
   public:
-    ~Camera();
+    Camera(const char* device, const uint32_t num_buffers, const MemType memtype = MemType::MMAP);
+    ~Camera() noexcept;
 
-    Camera(const char* device, const uint32_t buffer_count);
+    Camera(Camera&& other) noexcept;
+    Camera& operator=(Camera&& other) noexcept;
 
     void stream_on();
 
@@ -30,12 +39,12 @@ class Camera {
     static constexpr uint32_t WIDTH = 240;
     static constexpr uint32_t HEIGHT = 180;
 
+    uint32_t MemoryType;
     int fd = -1;
     uint32_t sizeimage = 0;
     uint32_t bytesperline = 0;
-    std::vector<std::pair<void*, uint32_t>> buffers;
 
-    void reset() noexcept;
+    std::unique_ptr<BufferPool> buffers;
 };
 
 } // namespace tofcam
