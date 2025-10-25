@@ -24,7 +24,7 @@ class MmapBufferPool final : public BufferPool {
     MmapBufferPool& operator=(MmapBufferPool&& other) noexcept;
     MmapBufferPool(const MmapBufferPool&) = delete;
     MmapBufferPool& operator=(const MmapBufferPool&) = delete;
-    
+
     void* sync_start(const uint32_t index) override;
     int sync_end(const uint32_t index) override;
 

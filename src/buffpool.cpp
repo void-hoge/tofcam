@@ -46,8 +46,7 @@ MmapBufferPool::~MmapBufferPool() noexcept {
     this->buffers.clear();
 }
 
-MmapBufferPool::MmapBufferPool(MmapBufferPool&& other) noexcept
-    : buffers(std::move(other.buffers)) {
+MmapBufferPool::MmapBufferPool(MmapBufferPool&& other) noexcept : buffers(std::move(other.buffers)) {
     other.buffers.clear();
 }
 
@@ -130,8 +129,7 @@ DmaBufferPool::~DmaBufferPool() noexcept {
     }
 }
 
-DmaBufferPool::DmaBufferPool(DmaBufferPool&& other) noexcept 
-    : fd(other.fd), buffers(std::move(other.buffers)){
+DmaBufferPool::DmaBufferPool(DmaBufferPool&& other) noexcept : fd(other.fd), buffers(std::move(other.buffers)) {
     other.fd = -1;
     other.buffers.clear();
 }
