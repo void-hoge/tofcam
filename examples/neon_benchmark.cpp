@@ -32,7 +32,6 @@ int main(int argc, char* argv[]) {
 
     const auto [width, height] = camera.get_size();
     const auto [sizeimage, bytesperline] = camera.get_bytes();
-    std::vector unpacked(4, std::vector<int16_t>(width * height, 0));
     std::vector<float> depth(width * height, 0.0f);
     std::vector<float> confidence(width * height, 0.0f);
     camera.stream_on();
