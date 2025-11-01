@@ -176,9 +176,9 @@ void compute_depth_confidence_from_y12p_neon(
         for (uint32_t x = 0; x < width; x += 16) {
             const uint32_t offset = x / 2 * 3;
             const uint8x8x3_t b0 = vld3_u8(line0 + offset);
-            const uint8x8x3_t b1 = vld3_u8(line1 + offset);
             const uint8x8x3_t b2 = vld3_u8(line2 + offset);
             const uint8x8x3_t b3 = vld3_u8(line3 + offset);
+            const uint8x8x3_t b1 = vld3_u8(line1 + offset);
             int16x8_t p0[2], p1[2], p2[2], p3[2];
             unpack_y12p_s16x8x2(b0, p0[0], p0[1]);
             unpack_y12p_s16x8x2(b1, p1[0], p1[1]);

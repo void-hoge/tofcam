@@ -9,7 +9,7 @@
 |              | Arducam ToF SDK | tofcam scalar (depth) | tofcam neon (depth) |
 |--------------|-----------------|-----------------------|---------------------|
 | CPU Load     | 18.4%           | 1.21% (1.14%)         | 0.68% (0.57%)       |
-| Max Cvt Rate | (not supported) | 11500fps (12300fps)   | 22900fps (27800fps) | 
+| Max Cvt Rate | (not supported) | 11500fps (12300fps)   | 22900fps (28300fps) | 
 
 ### Raspberry Pi Zero 2 W (Cortex A53 @ 1.0GHz)
 
