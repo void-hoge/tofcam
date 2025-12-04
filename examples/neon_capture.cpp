@@ -9,8 +9,8 @@
 #include <vector>
 
 int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        fprintf(stderr, "usage: %s <device>\n", argv[0]);
+    if (argc != 2 && argc != 3) {
+        fprintf(stderr, "usage: %s <device> [dst]\n", argv[0]);
         exit(EXIT_FAILURE);
     }
     const char* device = argv[1];
@@ -57,6 +57,26 @@ int main(int argc, char* argv[]) {
             }
             depth_ofst << "\n";
             amplitude_ofst << "\n";
+        }
+    }
+    if (argc == 3) {
+        auto save_float_array = [&](const std::vector<float>& data, const char* filename) {
+            FILE* fp = fopen(filename, "wb");
+            if (fp == nullptr) {
+                char msg[256];
+                snprintf(msg, sizeof(msg), "Failed to open %s", filename);
+                throw std::runtime_error(msg);
+            }
+            fwrite(data.data(), sizeof(float), data.size(), fp);
+            fclose(fp);
+        };
+        const char* dstdir = argv[2];
+        for (int i = 0; i < ITER; i++) {
+            char path[256];
+            snprintf(path, sizeof(path), "%s/depth_%03d.bin", dstdir, i);
+            save_float_array(depth[i], path);
+            snprintf(path, sizeof(path), "%s/amplitude_%03d.bin", dstdir, i);
+            save_float_array(amplitude[i], path);
         }
     }
 }
