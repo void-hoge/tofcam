@@ -63,7 +63,7 @@ void compute_depth_confidence(
         const int16_t sin = I3 - I1;
         const int16_t cos = I0 - I2;
         if constexpr (EnableConfidence) {
-            confidence[i] = 0.125 * std::sqrt(float(cos) * cos + float(sin) * sin);
+            confidence[i] = std::sqrt(float(cos) * cos + float(sin) * sin) * 8.0f;
         }
 #if 0
         const float phase = std::atan2(sin, cos);
@@ -165,7 +165,7 @@ void compute_depth_confidence_from_y12p_neon(
     const float scale = bias;
     const float32x4_t vBias = vdupq_n_f32(bias);
     const float32x4_t vScale = vdupq_n_f32(scale);
-    const float32x4_t vConfScale = vdupq_n_f32(0.125);
+    const float32x4_t vConfScale = vdupq_n_f32(8.0f);
 
     for (uint32_t y = 0; y < height; y++) {
         const uint8_t* line0 = static_cast<const uint8_t*>(frame0) + y * bytesperline;
