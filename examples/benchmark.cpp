@@ -17,7 +17,7 @@ class Timer {
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
-        fprintf(stderr, "usage: %s <dir>\n", argv[0]);
+        fprintf(stderr, "usage: %s <source>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
     const char* dir = argv[1];

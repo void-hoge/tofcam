@@ -5,14 +5,8 @@
 #include <utility.hpp>
 #include <vector>
 
-int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        fprintf(stderr, "usage: %s <device>\n", argv[0]);
-        exit(EXIT_FAILURE);
-    }
-    const char* device = argv[1];
-
-    auto camera = tofcam::Camera(device, 8, tofcam::MemType::DMABUF);
+int main() {
+    auto camera = tofcam::Camera("/dev/video0", 8, tofcam::MemType::DMABUF);
 
     const auto [width, height] = camera.get_size();
     const auto [sizeimage, bytesperline] = camera.get_bytes();
