@@ -29,7 +29,6 @@ int main(int argc, char* argv[]) {
     constexpr uint32_t ITER = 30 * 1000;
 
     auto camera = tofcam::FakeCamera(device, 8);
-
     const auto [width, height] = camera.get_size();
     const auto [sizeimage, bytesperline] = camera.get_bytes();
     std::vector<float> depth(width * height, 0.0f);

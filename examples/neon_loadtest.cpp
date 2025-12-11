@@ -6,8 +6,8 @@
 #include <vector>
 
 int main() {
-    auto camera = tofcam::Camera("/dev/video0", 8, tofcam::MemType::DMABUF);
-
+    constexpr int range = 2000;
+    auto camera = tofcam::Camera("/dev/video0", "/dev/v4l-subdev2", 8, range, tofcam::MemType::DMABUF);
     const auto [width, height] = camera.get_size();
     const auto [sizeimage, bytesperline] = camera.get_bytes();
     std::vector<float> depth(width * height, 0.0f);
@@ -21,7 +21,7 @@ int main() {
         }
         tofcam::compute_depth_confidence_from_y12p_neon<true>(
                 depth.data(), amplitude.data(), frames[0].first, frames[1].first, frames[2].first, frames[3].first, width,
-                height, bytesperline, 2000);
+                height, bytesperline, range);
         for (const auto& [data, index] : frames) {
             camera.enqueue(index);
         }

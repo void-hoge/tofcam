@@ -15,9 +15,9 @@ int main(int argc, char* argv[]) {
     }
     const char* dstdir = argv[1];
     constexpr uint32_t ITER = 60;
+    constexpr int range = 2000;
 
-    auto camera = tofcam::Camera("/dev/video0", 8, tofcam::MemType::DMABUF);
-
+    auto camera = tofcam::Camera("/dev/video0", "/dev/v4l-subdev2", 8, range, tofcam::MemType::DMABUF);
     const auto [width, height] = camera.get_size();
     const auto [sizeimage, bytesperline] = camera.get_bytes();
     std::vector<std::vector<float>> depth;
@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
         amplitude.emplace_back(width * height, 0.0f);
         tofcam::compute_depth_confidence_from_y12p_neon<true>(
                 depth.back().data(), amplitude.back().data(), frames[0].first, frames[1].first, frames[2].first,
-                frames[3].first, width, height, bytesperline, 2000);
+                frames[3].first, width, height, bytesperline, range);
         for (const auto& [data, index] : frames) {
             camera.enqueue(index);
         }

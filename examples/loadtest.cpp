@@ -6,8 +6,8 @@
 #include <vector>
 
 int main() {
-    auto camera = tofcam::Camera("/dev/video0", 8, tofcam::MemType::DMABUF);
-
+    constexpr int range = 2000;
+    auto camera = tofcam::Camera("/dev/video0", "/dev/v4l-subdev2", 8, range, tofcam::MemType::DMABUF);
     const auto [width, height] = camera.get_size();
     const auto [sizeimage, bytesperline] = camera.get_bytes();
     std::vector unpacked(4, std::vector<int16_t>(width * height, 0));
@@ -23,7 +23,8 @@ int main() {
         }
         tofcam::compute_depth_confidence<true>(
                 depth.data(), amplitude.data(), unpacked[0].data(), unpacked[1].data(), unpacked[2].data(), unpacked[3].data(),
-                width * height, 2000);
+                width * height, range);
+        fprintf(stderr, "%7.2f\n", depth[90 * width + 120]);
     }
     camera.stream_off();
 }

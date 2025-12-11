@@ -15,7 +15,8 @@ enum class MemType {
 
 class Camera {
   public:
-    Camera(const char* device, const uint32_t num_buffers, const MemType memtype = MemType::MMAP);
+    Camera(const char* device, const char* subdevice, const uint32_t num_buffers, const int range = 4000,
+           const MemType memtype = MemType::MMAP);
     ~Camera() noexcept;
 
     Camera(Camera&& other) noexcept;
@@ -43,6 +44,7 @@ class Camera {
 
     uint32_t MemoryType;
     int fd = -1;
+    int subfd = -1;
     uint32_t sizeimage = 0;
     uint32_t bytesperline = 0;
 
