@@ -33,9 +33,16 @@ int main(int argc, char* argv[]) {
         }
         depth.emplace_back(width * height, 0.0f);
         amplitude.emplace_back(width * height, 0.0f);
-        tofcam::compute_depth_confidence<true>(
+        if (range == 4000) {
+            tofcam::compute_depth_confidence<true, tofcam::Rotation::Quarter>(
                 depth.back().data(), amplitude.back().data(), unpacked[0].data(), unpacked[1].data(), unpacked[2].data(),
                 unpacked[3].data(), width * height, range);
+
+        } else {
+            tofcam::compute_depth_confidence<true, tofcam::Rotation::Zero>(
+                depth.back().data(), amplitude.back().data(), unpacked[0].data(), unpacked[1].data(), unpacked[2].data(),
+                unpacked[3].data(), width * height, range);
+        }
     }
     camera.stream_off();
 

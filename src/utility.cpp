@@ -46,7 +46,7 @@ static inline float approx_atan2(const int16_t y, const int16_t x) {
     return theta;
 }
 
-template <bool EnableConfidence>
+template <bool EnableConfidence, Rotation rotation>
 void compute_depth_confidence(
         float* depth, float* confidence, const int16_t* frame0, const int16_t* frame1, const int16_t* frame2,
         const int16_t* frame3, const uint32_t num_pixels, const float range) {
@@ -63,18 +63,44 @@ void compute_depth_confidence(
         if constexpr (EnableConfidence) {
             confidence[i] = std::sqrt(float(cos) * cos + float(sin) * sin) * 8.0f;
         }
+        int16_t y, x;
+        if constexpr (rotation == Rotation::Zero) {
+            y = sin;
+            x = cos;
+        } else if constexpr (rotation == Rotation::Quarter) {
+            y = cos;
+            x = -sin;
+        } else if constexpr (rotation == Rotation::Half) {
+            y = -sin;
+            x = -cos;
+        } else {
+            y = -cos;
+            x = sin;
+        }
 #if 0
-        const float phase = std::atan2(sin, cos);
+        const float phase = std::atan2(y, x);
 #else
-        const float phase = approx_atan2(sin, cos);
+        const float phase = approx_atan2(y, x);
 #endif
-        depth[i] = (phase >= std::numbers::pi_v<float> || ((cos == 0) && (sin == 0))) ? 0.0f : phase * scale + bias;
+        depth[i] = (phase >= std::numbers::pi_v<float> || ((y == 0) && (x == 0))) ? 0.0f : phase * scale + bias;
     }
 }
 
-template void compute_depth_confidence<true>(
+template void compute_depth_confidence<true, Rotation::Zero>(
         float*, float*, const int16_t*, const int16_t*, const int16_t*, const int16_t*, const uint32_t, const float);
-template void compute_depth_confidence<false>(
+template void compute_depth_confidence<true, Rotation::Quarter>(
+        float*, float*, const int16_t*, const int16_t*, const int16_t*, const int16_t*, const uint32_t, const float);
+template void compute_depth_confidence<true, Rotation::Half>(
+        float*, float*, const int16_t*, const int16_t*, const int16_t*, const int16_t*, const uint32_t, const float);
+template void compute_depth_confidence<true, Rotation::ThreeQuarters>(
+        float*, float*, const int16_t*, const int16_t*, const int16_t*, const int16_t*, const uint32_t, const float);
+template void compute_depth_confidence<false, Rotation::Zero>(
+        float*, float*, const int16_t*, const int16_t*, const int16_t*, const int16_t*, const uint32_t, const float);
+template void compute_depth_confidence<false, Rotation::Quarter>(
+        float*, float*, const int16_t*, const int16_t*, const int16_t*, const int16_t*, const uint32_t, const float);
+template void compute_depth_confidence<false, Rotation::Half>(
+        float*, float*, const int16_t*, const int16_t*, const int16_t*, const int16_t*, const uint32_t, const float);
+template void compute_depth_confidence<false, Rotation::ThreeQuarters>(
         float*, float*, const int16_t*, const int16_t*, const int16_t*, const int16_t*, const uint32_t, const float);
 
 #if defined(__ARM_NEON)
