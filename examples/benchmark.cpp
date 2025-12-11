@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
         }
         tofcam::compute_depth_confidence<false>(
                 depth.data(), amplitude.data(), unpacked[0].data(), unpacked[1].data(), unpacked[2].data(), unpacked[3].data(),
-                width * height, 75'000'000);
+                width * height, 2000);
     }
     auto proctime = timer.elapsed_us();
     printf("%u us (%.2f rawframes/s)\n", proctime, (double)ITER * 1'000'000 * 4 / proctime);

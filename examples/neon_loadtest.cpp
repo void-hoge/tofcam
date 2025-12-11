@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
         }
         tofcam::compute_depth_confidence_from_y12p_neon<true>(
                 depth.data(), amplitude.data(), frames[0].first, frames[1].first, frames[2].first, frames[3].first, width,
-                height, bytesperline, 75'000'000);
+                height, bytesperline, 2000);
         for (const auto& [data, index] : frames) {
             camera.enqueue(index);
         }

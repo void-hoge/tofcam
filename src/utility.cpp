@@ -49,9 +49,7 @@ static inline float approx_atan2(const int16_t y, const int16_t x) {
 template <bool EnableConfidence>
 void compute_depth_confidence(
         float* depth, float* confidence, const int16_t* frame0, const int16_t* frame1, const int16_t* frame2,
-        const int16_t* frame3, const uint32_t num_pixels, const float modfreq_hz) {
-    constexpr float C = 3e8; // speed of light (300,000,000 m/s)
-    const float range = C / (2.0f * modfreq_hz) * 1000.0f;
+        const int16_t* frame3, const uint32_t num_pixels, const float range) {
     const float bias = 0.5f * range;
     const float scale = bias * std::numbers::inv_pi_v<float>;
 
@@ -157,10 +155,7 @@ static inline void approx_atan2x8(const int16x8_t& y, const int16x8_t& x, float3
 template <bool EnableConfidence>
 void compute_depth_confidence_from_y12p_neon(
         float* depth, float* confidence, const void* frame0, const void* frame1, const void* frame2, const void* frame3,
-        const uint32_t width, const uint32_t height, const uint32_t bytesperline, const float modfreq_hz) {
-
-    static constexpr float C = 3e8;
-    const float range = C / (2.0f * modfreq_hz) * 1000.0f;
+        const uint32_t width, const uint32_t height, const uint32_t bytesperline, const float range) {
     const float bias = 0.5f * range;
     const float scale = bias;
     const float32x4_t vBias = vdupq_n_f32(bias);
