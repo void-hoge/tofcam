@@ -17,7 +17,7 @@ class Timer {
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
-        fprintf(stderr, "usage: %s <dir>\n", argv[0]);
+        fprintf(stderr, "usage: %s <source>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
     const char* dir = argv[1];
@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
             tofcam::unpack_y12p(unpacked[j].data(), data, width, height, bytesperline);
             camera.enqueue(index);
         }
-        tofcam::compute_depth_confidence<false>(
+        tofcam::compute_depth_confidence<true>(
                 depth.data(), amplitude.data(), unpacked[0].data(), unpacked[1].data(), unpacked[2].data(), unpacked[3].data(),
                 width * height, 75'000'000);
     }

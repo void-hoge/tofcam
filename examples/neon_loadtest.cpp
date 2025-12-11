@@ -5,15 +5,11 @@
 #include <utility.hpp>
 #include <vector>
 
-int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        fprintf(stderr, "usage: %s <device>\n", argv[0]);
-        exit(EXIT_FAILURE);
-    }
-    const char* device = argv[1];
-
-    auto camera = tofcam::Camera(device, 8, tofcam::MemType::DMABUF);
-
+int main() {
+    constexpr int range = 2000;
+    constexpr bool enableConfidence = false;
+    constexpr int modfreq_hz = range == 2000 ? 75'000'000 : 37'500'000;
+    auto camera = tofcam::Camera("/dev/video0", "/dev/v4l-subdev2", 8, range, tofcam::MemType::DMABUF);
     const auto [width, height] = camera.get_size();
     const auto [sizeimage, bytesperline] = camera.get_bytes();
     std::vector<float> depth(width * height, 0.0f);
@@ -25,9 +21,15 @@ int main(int argc, char* argv[]) {
         for (int j = 0; j < 4; j++) {
             frames[j] = camera.dequeue();
         }
-        tofcam::compute_depth_confidence_from_y12p_neon<true>(
-                depth.data(), amplitude.data(), frames[0].first, frames[1].first, frames[2].first, frames[3].first, width,
-                height, bytesperline, 75'000'000);
+        if (range == 4000) {
+            tofcam::compute_depth_confidence_from_y12p_neon<enableConfidence, tofcam::Rotation::Quarter>(
+                    depth.data(), amplitude.data(), frames[0].first, frames[1].first, frames[2].first, frames[3].first, width,
+                    height, bytesperline, modfreq_hz);
+        } else {
+            tofcam::compute_depth_confidence_from_y12p_neon<enableConfidence, tofcam::Rotation::Zero>(
+                    depth.data(), amplitude.data(), frames[0].first, frames[1].first, frames[2].first, frames[3].first, width,
+                    height, bytesperline, modfreq_hz);
+        }
         for (const auto& [data, index] : frames) {
             camera.enqueue(index);
         }
