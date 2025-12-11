@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
     constexpr uint32_t ITER = 60;
     constexpr int range = 2000;
     constexpr bool enableConfidence = true;
-
+    constexpr int modfreq_hz = range == 2000 ? 75'000'000 : 37'500'000;
     auto camera = tofcam::Camera("/dev/video0", "/dev/v4l-subdev2", 8, range, tofcam::MemType::DMABUF);
     const auto [width, height] = camera.get_size();
     const auto [sizeimage, bytesperline] = camera.get_bytes();
@@ -37,12 +37,12 @@ int main(int argc, char* argv[]) {
         if (range == 4000) {
             tofcam::compute_depth_confidence<enableConfidence, tofcam::Rotation::Quarter>(
                     depth.back().data(), amplitude.back().data(), unpacked[0].data(), unpacked[1].data(), unpacked[2].data(),
-                    unpacked[3].data(), width * height, range);
+                    unpacked[3].data(), width * height, modfreq_hz);
 
         } else {
             tofcam::compute_depth_confidence<enableConfidence, tofcam::Rotation::Zero>(
                     depth.back().data(), amplitude.back().data(), unpacked[0].data(), unpacked[1].data(), unpacked[2].data(),
-                    unpacked[3].data(), width * height, range);
+                    unpacked[3].data(), width * height, modfreq_hz);
         }
     }
     camera.stream_off();

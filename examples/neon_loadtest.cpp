@@ -8,6 +8,7 @@
 int main() {
     constexpr int range = 2000;
     constexpr bool enableConfidence = false;
+    constexpr int modfreq_hz = range == 2000 ? 75'000'000 : 37'500'000;
     auto camera = tofcam::Camera("/dev/video0", "/dev/v4l-subdev2", 8, range, tofcam::MemType::DMABUF);
     const auto [width, height] = camera.get_size();
     const auto [sizeimage, bytesperline] = camera.get_bytes();
@@ -23,11 +24,11 @@ int main() {
         if (range == 4000) {
             tofcam::compute_depth_confidence_from_y12p_neon<enableConfidence, tofcam::Rotation::Quarter>(
                 depth.data(), amplitude.data(), frames[0].first, frames[1].first, frames[2].first, frames[3].first, width,
-                height, bytesperline, range);
+                height, bytesperline, modfreq_hz);
         } else {
             tofcam::compute_depth_confidence_from_y12p_neon<enableConfidence, tofcam::Rotation::Zero>(
                 depth.data(), amplitude.data(), frames[0].first, frames[1].first, frames[2].first, frames[3].first, width,
-                height, bytesperline, range);
+                height, bytesperline, modfreq_hz);
         }
         fprintf(stderr, "%7.2f\n", depth[90 * width + 120]);
         for (const auto& [data, index] : frames) {
