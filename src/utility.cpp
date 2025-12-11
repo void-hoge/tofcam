@@ -238,10 +238,8 @@ void compute_depth_confidence_from_y12p_neon(
                     const float32x4_t yhi = vcvtq_f32_s32(vmovl_s16(vget_high_s16(vy)));
                     const float32x4_t xlo = vcvtq_f32_s32(vmovl_s16(vget_low_s16(vx)));
                     const float32x4_t xhi = vcvtq_f32_s32(vmovl_s16(vget_high_s16(vx)));
-                    amplo.val[i] =
-                            vmulq_f32(vsqrtq_f32(vaddq_f32(vmulq_f32(ylo, ylo), vmulq_f32(xlo, xlo))), vConfScale);
-                    amphi.val[i] =
-                            vmulq_f32(vsqrtq_f32(vaddq_f32(vmulq_f32(yhi, yhi), vmulq_f32(xhi, xhi))), vConfScale);
+                    amplo.val[i] = vmulq_f32(vsqrtq_f32(vaddq_f32(vmulq_f32(ylo, ylo), vmulq_f32(xlo, xlo))), vConfScale);
+                    amphi.val[i] = vmulq_f32(vsqrtq_f32(vaddq_f32(vmulq_f32(yhi, yhi), vmulq_f32(xhi, xhi))), vConfScale);
                 }
             }
             vst2q_f32(depth + y * width + x + 0, depthlo);

@@ -34,12 +34,12 @@ int main(int argc, char* argv[]) {
         amplitude.emplace_back(width * height, 0.0f);
         if (range == 4000) {
             tofcam::compute_depth_confidence_from_y12p_neon<enableConfidence, tofcam::Rotation::Quarter>(
-                depth.back().data(), amplitude.back().data(), frames[0].first, frames[1].first, frames[2].first,
-                frames[3].first, width, height, bytesperline, modfreq_hz);
+                    depth.back().data(), amplitude.back().data(), frames[0].first, frames[1].first, frames[2].first,
+                    frames[3].first, width, height, bytesperline, modfreq_hz);
         } else {
             tofcam::compute_depth_confidence_from_y12p_neon<enableConfidence, tofcam::Rotation::Zero>(
-                depth.back().data(), amplitude.back().data(), frames[0].first, frames[1].first, frames[2].first,
-                frames[3].first, width, height, bytesperline, modfreq_hz);
+                    depth.back().data(), amplitude.back().data(), frames[0].first, frames[1].first, frames[2].first,
+                    frames[3].first, width, height, bytesperline, modfreq_hz);
         }
         for (const auto& [data, index] : frames) {
             camera.enqueue(index);

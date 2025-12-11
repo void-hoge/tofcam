@@ -32,7 +32,6 @@ int main() {
                     depth.data(), amplitude.data(), unpacked[0].data(), unpacked[1].data(), unpacked[2].data(),
                     unpacked[3].data(), width * height, modfreq_hz);
         }
-        fprintf(stderr, "%7.2f\n", depth[90 * width + 120]);
     }
     camera.stream_off();
 }
