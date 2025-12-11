@@ -16,6 +16,7 @@ int main(int argc, char* argv[]) {
     const char* dstdir = argv[1];
     constexpr uint32_t ITER = 60;
     constexpr int range = 2000;
+    constexpr bool enableConfidence = true;
 
     auto camera = tofcam::Camera("/dev/video0", "/dev/v4l-subdev2", 8, range, tofcam::MemType::DMABUF);
     const auto [width, height] = camera.get_size();
@@ -34,12 +35,12 @@ int main(int argc, char* argv[]) {
         depth.emplace_back(width * height, 0.0f);
         amplitude.emplace_back(width * height, 0.0f);
         if (range == 4000) {
-            tofcam::compute_depth_confidence<true, tofcam::Rotation::Quarter>(
+            tofcam::compute_depth_confidence<enableConfidence, tofcam::Rotation::Quarter>(
                     depth.back().data(), amplitude.back().data(), unpacked[0].data(), unpacked[1].data(), unpacked[2].data(),
                     unpacked[3].data(), width * height, range);
 
         } else {
-            tofcam::compute_depth_confidence<true, tofcam::Rotation::Zero>(
+            tofcam::compute_depth_confidence<enableConfidence, tofcam::Rotation::Zero>(
                     depth.back().data(), amplitude.back().data(), unpacked[0].data(), unpacked[1].data(), unpacked[2].data(),
                     unpacked[3].data(), width * height, range);
         }

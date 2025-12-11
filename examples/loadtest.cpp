@@ -7,6 +7,7 @@
 
 int main() {
     constexpr int range = 2000;
+    constexpr bool enableConfidence = true;
     auto camera = tofcam::Camera("/dev/video0", "/dev/v4l-subdev2", 8, range, tofcam::MemType::DMABUF);
     const auto [width, height] = camera.get_size();
     const auto [sizeimage, bytesperline] = camera.get_bytes();
@@ -22,11 +23,11 @@ int main() {
             camera.enqueue(index);
         }
         if (range == 4000) {
-            tofcam::compute_depth_confidence<true, tofcam::Rotation::Quarter>(
+            tofcam::compute_depth_confidence<enableConfidence, tofcam::Rotation::Quarter>(
                     depth.data(), amplitude.data(), unpacked[0].data(), unpacked[1].data(), unpacked[2].data(),
                     unpacked[3].data(), width * height, range);
         } else {
-            tofcam::compute_depth_confidence<true, tofcam::Rotation::Zero>(
+            tofcam::compute_depth_confidence<enableConfidence, tofcam::Rotation::Zero>(
                     depth.data(), amplitude.data(), unpacked[0].data(), unpacked[1].data(), unpacked[2].data(),
                     unpacked[3].data(), width * height, range);
         }

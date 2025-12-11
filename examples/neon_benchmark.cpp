@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
         for (int j = 0; j < 4; j++) {
             frames[j] = camera.dequeue();
         }
-        tofcam::compute_depth_confidence_from_y12p_neon<false>(
+        tofcam::compute_depth_confidence_from_y12p_neon<false, tofcam::Rotation::Zero>(
                 depth.data(), confidence.data(), frames[0].first, frames[1].first, frames[2].first, frames[3].first, width,
                 height, bytesperline, 2000);
         for (const auto& [data, index] : frames) {
