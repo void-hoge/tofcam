@@ -41,3 +41,9 @@ $ cmake --build build
 |--------------|-----------------|-------------------|---------------------|-------------------|
 | CPU Load     | 46.1%           | 35.8% (31.1%)     | 6.9% (6.1%)         | 6.0% (4.6%)       |
 | Max Cvt Rate | (not supported) | 350fps (400fps)   | 2300fps (2500fps)   | 3000fps (4500fps) |
+
+## Author
+- Mugi Noda (void-hoge)
+
+## License
+- MIT
