@@ -1,3 +1,25 @@
+# tofcam
+- `tofcam` is an optimized implementation of a time-of-flight depth camera library.
+- It computes depth and confidence (derived from amplitude) image from raw four-phase camera data.
+
+## Supported Camera & Platform
+- Raspberry Pi5
+- Arducam ToF Camera
+
+## Setup
+- For the initial setup, configure the environment according to the official Arducam documentation and confirm that the provided examples run correctly.
+- For subsequent setups, the media graph can be configured using [setup_rpi5.sh](./setup_rpi5.sh)
+
+## Build
+- You have to execute below in your RPi.
+
+```
+$ git clone https://github.com/void-hoge/tofcam.git
+$ cd tofcam
+$ cmake -S . -B build
+$ cmake --build build
+```
+
 ## Benchmarks
 - Values shown in parentheses indicate results when only depth is computed, without computing confidence.
 - The frame rate indicates the number of raw frames processed per second, Four raw frames are combined to produce one depth image.
@@ -19,3 +41,9 @@
 |--------------|-----------------|-------------------|---------------------|-------------------|
 | CPU Load     | 46.1%           | 35.8% (31.1%)     | 6.9% (6.1%)         | 6.0% (4.6%)       |
 | Max Cvt Rate | (not supported) | 350fps (400fps)   | 2300fps (2500fps)   | 3000fps (4500fps) |
+
+## Author
+- Mugi Noda (void-hoge)
+
+## License
+- MIT
