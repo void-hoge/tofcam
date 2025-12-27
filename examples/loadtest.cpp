@@ -1,7 +1,7 @@
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
-#include <tofcam.hpp>
+#include <camera.hpp>
 #include <utility.hpp>
 #include <vector>
 

@@ -2,7 +2,7 @@
 #include <sys/mman.h>
 #include <syscall.hpp>
 #include <system_error>
-#include <tofcam.hpp>
+#include <camera.hpp>
 #include <vector>
 
 namespace tofcam {

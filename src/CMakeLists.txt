@@ -1,5 +1,5 @@
 add_library(tofcam
-    tofcam.cpp
+    camera.cpp
     syscall.cpp
     utility.cpp
     fakecam.cpp
