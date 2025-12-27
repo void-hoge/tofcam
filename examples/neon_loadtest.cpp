@@ -1,7 +1,7 @@
+#include <camera.hpp>
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
-#include <camera.hpp>
 #include <utility.hpp>
 #include <vector>
 

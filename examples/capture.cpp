@@ -1,10 +1,10 @@
+#include <camera.hpp>
 #include <cstdio>
 #include <cstdlib>
 #include <fakecam.hpp>
 #include <fstream>
 #include <iostream>
 #include <system_error>
-#include <camera.hpp>
 #include <utility.hpp>
 #include <vector>
 
