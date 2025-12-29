@@ -35,6 +35,13 @@ BO410::BO410(const char* device, const char* subdevice, const int range, const M
     }
 }
 
+BO410::~BO410() {
+    if (this->subfd >= 0) {
+        syscall::close(this->subfd);
+        this->subfd = -1;
+    }
+}
+
 void BO410::stream_on() {
     this->camera.stream_on();
 }
