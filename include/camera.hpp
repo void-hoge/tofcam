@@ -41,7 +41,7 @@ class Camera {
     static constexpr uint32_t WIDTH = 240;
     static constexpr uint32_t HEIGHT = 180;
 
-    uint32_t MemoryType;
+    uint32_t memorytype;
     int fd = -1;
     uint32_t sizeimage = 0;
     uint32_t bytesperline = 0;

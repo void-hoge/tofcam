@@ -8,7 +8,7 @@
 namespace tofcam {
 
 Camera::Camera(const char* device, const uint32_t num_buffers, const MemType memtype)
-    : MemoryType(memtype == MemType::MMAP ? V4L2_MEMORY_MMAP : V4L2_MEMORY_DMABUF) {
+    : memorytype(memtype == MemType::MMAP ? V4L2_MEMORY_MMAP : V4L2_MEMORY_DMABUF) {
     this->fd = syscall::open(device, O_RDWR, 0);
     if (this->fd < 0) {
         throw std::system_error(errno, std::generic_category(), "Failed to open camera device.");
@@ -55,7 +55,7 @@ Camera::Camera(const char* device, const uint32_t num_buffers, const MemType mem
             struct v4l2_requestbuffers req = {};
             req.count = num_buffers;
             req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-            req.memory = this->MemoryType;
+            req.memory = this->memorytype;
             if (syscall::ioctl(this->fd, VIDIOC_REQBUFS, &req) < 0) {
                 throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_REQBUFS failed.");
             }
@@ -64,7 +64,7 @@ Camera::Camera(const char* device, const uint32_t num_buffers, const MemType mem
             }
         }
         // allocate buffers
-        if (this->MemoryType == V4L2_MEMORY_MMAP) {
+        if (this->memorytype == V4L2_MEMORY_MMAP) {
             this->buffers = std::make_unique<MmapBufferPool>(this->fd, num_buffers);
         } else {
             this->buffers = std::make_unique<DmaBufferPool>("/dev/dma_heap/linux,cma", num_buffers, this->sizeimage);
@@ -91,12 +91,12 @@ Camera::~Camera() noexcept {
 }
 
 Camera::Camera(Camera&& other) noexcept
-    : MemoryType(other.MemoryType), fd(other.fd), sizeimage(other.sizeimage), bytesperline(other.bytesperline),
+    : memorytype(other.memorytype), fd(other.fd), sizeimage(other.sizeimage), bytesperline(other.bytesperline),
       buffers(std::move(other.buffers)) {}
 
 Camera& Camera::operator=(Camera&& other) noexcept {
     if (this != &other) {
-        this->MemoryType = other.MemoryType;
+        this->memorytype = other.memorytype;
         if (this->fd >= 0) {
             syscall::close(this->fd);
         }
@@ -125,7 +125,7 @@ void Camera::stream_off() {
 std::pair<void*, uint32_t> Camera::dequeue() {
     struct v4l2_buffer buf = {};
     buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    buf.memory = this->MemoryType;
+    buf.memory = this->memorytype;
     if (syscall::ioctl(this->fd, VIDIOC_DQBUF, &buf) < 0) {
         throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_DQBUF failed.");
     }
@@ -135,7 +135,7 @@ std::pair<void*, uint32_t> Camera::dequeue() {
 void Camera::enqueue(const uint32_t index) {
     struct v4l2_buffer buf = {};
     buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    buf.memory = this->MemoryType;
+    buf.memory = this->memorytype;
     buf.index = index;
     buf.m.fd = this->buffers->sync_end(index);
     buf.length = this->sizeimage;
