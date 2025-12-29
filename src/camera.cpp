@@ -7,18 +7,11 @@
 
 namespace tofcam {
 
-Camera::Camera(const char* device, const char* subdevice, const uint32_t num_buffers, const int range, const MemType memtype)
+Camera::Camera(const char* device, const uint32_t num_buffers, const MemType memtype)
     : MemoryType(memtype == MemType::MMAP ? V4L2_MEMORY_MMAP : V4L2_MEMORY_DMABUF) {
-    if (range != 2000 && range != 4000) {
-        throw std::invalid_argument("Invalid range mode.");
-    }
     this->fd = syscall::open(device, O_RDWR, 0);
     if (this->fd < 0) {
         throw std::system_error(errno, std::generic_category(), "Failed to open camera device.");
-    }
-    this->subfd = syscall::open(subdevice, O_RDWR, 0);
-    if (this->subfd < 0) {
-        throw std::system_error(errno, std::generic_category(), "Failed to open subdevice.");
     }
     try {
         { // check capability
@@ -81,33 +74,16 @@ Camera::Camera(const char* device, const char* subdevice, const uint32_t num_buf
                 this->enqueue(i);
             }
         }
-        { // change mesuaring range
-            struct v4l2_control ctrl = {
-                    .id = V4L2_CTRL_CLASS_USER + 0x1901,
-                    .value = range == 2000 ? 1 : 0,
-            };
-            if (syscall::ioctl(this->subfd, VIDIOC_S_CTRL, &ctrl)) {
-                throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_S_CTRL failed.");
-            }
-        }
     } catch (...) {
         if (this->fd >= 0) {
             syscall::close(this->fd);
             this->fd = -1;
-        }
-        if (this->subfd >= 0) {
-            syscall::close(this->subfd);
-            this->subfd = -1;
         }
         throw;
     }
 }
 
 Camera::~Camera() noexcept {
-    if (this->subfd >= 0) {
-        syscall::close(this->subfd);
-        this->subfd = -1;
-    }
     if (this->fd >= 0) {
         syscall::close(this->fd);
         this->fd = -1;

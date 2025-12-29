@@ -1,8 +1,3 @@
-add_executable(capture capture.cpp)
-target_link_libraries(capture
-    PRIVATE tofcam
-)
-
 add_executable(loadtest loadtest.cpp)
 target_link_libraries(loadtest
     PRIVATE tofcam
@@ -10,11 +5,6 @@ target_link_libraries(loadtest
 
 add_executable(benchmark benchmark.cpp)
 target_link_libraries(benchmark
-    PRIVATE tofcam
-)
-
-add_executable(neon_capture neon_capture.cpp)
-target_link_libraries(neon_capture
     PRIVATE tofcam
 )
 

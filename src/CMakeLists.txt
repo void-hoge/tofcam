@@ -4,6 +4,7 @@ add_library(tofcam
     utility.cpp
     fakecam.cpp
     buffpool.cpp
+    bo410.cpp
 )
 
 target_include_directories(tofcam
