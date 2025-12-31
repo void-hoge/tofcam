@@ -7,7 +7,9 @@
 
 namespace tofcam {
 
-Camera::Camera(const char* device, const uint32_t num_buffers, const MemType memtype)
+Camera::Camera(
+        const char* device, const uint32_t num_buffers, const MemType memtype,
+        std::optional<std::pair<uint32_t, uint32_t>> imagesize)
     : memorytype(memtype == MemType::MMAP ? V4L2_MEMORY_MMAP : V4L2_MEMORY_DMABUF) {
     this->fd = syscall::open(device, O_RDWR, 0);
     if (this->fd < 0) {
@@ -26,29 +28,25 @@ Camera::Camera(const char* device, const uint32_t num_buffers, const MemType mem
                 throw std::runtime_error("Device does not support video streaming.");
             }
         }
-        { // set format
+        { // set capture format
             struct v4l2_format fmt = {};
             fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-            fmt.fmt.pix.field = V4L2_FIELD_NONE;
-            fmt.fmt.pix.pixelformat = v4l2_fourcc('Y', '1', '2', 'P');
-            fmt.fmt.pix.width = WIDTH;
-            fmt.fmt.pix.height = HEIGHT;
-            if (syscall::ioctl(this->fd, VIDIOC_S_FMT, &fmt) < 0) {
-                throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_S_FMT failed.");
+            if (syscall::ioctl(this->fd, VIDIOC_G_FMT, &fmt) < 0) {
+                throw std::runtime_error("ioctl VIDIOC_G_FMT failed.");
             }
+            this->width = fmt.fmt.pix.width;
+            this->height = fmt.fmt.pix.height;
             this->sizeimage = fmt.fmt.pix.sizeimage;
             this->bytesperline = fmt.fmt.pix.bytesperline;
-            if (fmt.fmt.pix.width != WIDTH) {
-                throw std::runtime_error("Unsupported width.");
-            }
-            if (fmt.fmt.pix.height != HEIGHT) {
-                throw std::runtime_error("Unsupported height.");
-            }
+            this->pixelformat = fmt.fmt.pix.pixelformat;
             if (this->sizeimage == 0) {
                 throw std::runtime_error("Sizeimage is zero, unsupported format?");
             }
             if (this->bytesperline == 0) {
                 throw std::runtime_error("Bytesperline is zero, unsupported format?");
+            }
+            if (syscall::ioctl(this->fd, VIDIOC_S_FMT, &fmt) < 0) {
+                throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_S_FMT failed.");
             }
         }
         { // setup mmap buffers
@@ -145,11 +143,15 @@ void Camera::enqueue(const uint32_t index) {
 }
 
 std::pair<uint32_t, uint32_t> Camera::get_size() const {
-    return {WIDTH, HEIGHT};
+    return {this->width, this->height};
 }
 
 std::pair<uint32_t, uint32_t> Camera::get_bytes() const {
     return {this->sizeimage, this->bytesperline};
+}
+
+uint32_t Camera::get_format() const {
+    return this->pixelformat;
 }
 
 } // namespace tofcam
