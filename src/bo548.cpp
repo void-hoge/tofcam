@@ -5,7 +5,7 @@
 
 namespace tofcam {
 
-BO548::BO548(const char* device, const MemType memtype) : camera(device, 4, memtype) {
+BO548::BO548(const char* device, const MemType memtype) : camera(device, 4, memtype, std::pair<uint32_t, uint32_t>{640, 4810}) {
     auto format = this->camera.get_format();
     fprintf(stderr, "format: %c%c%c%c\n", format & 0xff, (format >> 8) & 0xff, (format >> 16) & 0xff, (format >> 24) & 0xff);
     auto [width, height] = this->camera.get_size();

@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
     const char* directory = argv[1];
     std::vector<std::vector<float>> depth_frames;
     std::vector<std::vector<float>> confidence_frames;
-    auto camera = tofcam::BO548("/dev/video0", tofcam::MemType::DMABUF);
+    auto camera = tofcam::BO548("/dev/video0", tofcam::MemType::MMAP);
     const auto [width, height] = camera.get_size();
     camera.stream_on();
     for (int i = 0; i < 30; i++) {

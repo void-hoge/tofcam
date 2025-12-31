@@ -9,7 +9,7 @@ namespace tofcam {
 
 Camera::Camera(
         const char* device, const uint32_t num_buffers, const MemType memtype,
-        std::optional<std::pair<uint32_t, uint32_t>> imagesize)
+        std::optional<const std::pair<uint32_t, uint32_t>> imagesize)
     : memorytype(memtype == MemType::MMAP ? V4L2_MEMORY_MMAP : V4L2_MEMORY_DMABUF) {
     this->fd = syscall::open(device, O_RDWR, 0);
     if (this->fd < 0) {
@@ -31,20 +31,31 @@ Camera::Camera(
         { // set capture format
             struct v4l2_format fmt = {};
             fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-            if (syscall::ioctl(this->fd, VIDIOC_G_FMT, &fmt) < 0) {
-                throw std::runtime_error("ioctl VIDIOC_G_FMT failed.");
+            if (imagesize) {
+                auto [width, height] = imagesize.value();
+                fmt.fmt.pix.width = width;
+                fmt.fmt.pix.height = height;
+                fmt.fmt.pix.pixelformat = v4l2_fourcc('Y', '1', '2', 'P');
+                fmt.fmt.pix.colorspace = V4L2_COLORSPACE_DEFAULT;
+                if (syscall::ioctl(this->fd, VIDIOC_TRY_FMT, &fmt) < 0) {
+                    throw std::runtime_error("ioctl VIDIOC_TRY_FMT failed.");
+                }
+            } else {
+                if (syscall::ioctl(this->fd, VIDIOC_G_FMT, &fmt) < 0) {
+                    throw std::runtime_error("ioctl VIDIOC_G_FMT failed.");
+                }
+                if (fmt.fmt.pix.sizeimage == 0) {
+                    throw std::runtime_error("Sizeimage is zero, unsupported format?");
+                }
+                if (fmt.fmt.pix.bytesperline == 0) {
+                    throw std::runtime_error("Bytesperline is zero, unsupported format?");
+                }
             }
             this->width = fmt.fmt.pix.width;
             this->height = fmt.fmt.pix.height;
             this->sizeimage = fmt.fmt.pix.sizeimage;
             this->bytesperline = fmt.fmt.pix.bytesperline;
             this->pixelformat = fmt.fmt.pix.pixelformat;
-            if (this->sizeimage == 0) {
-                throw std::runtime_error("Sizeimage is zero, unsupported format?");
-            }
-            if (this->bytesperline == 0) {
-                throw std::runtime_error("Bytesperline is zero, unsupported format?");
-            }
             if (syscall::ioctl(this->fd, VIDIOC_S_FMT, &fmt) < 0) {
                 throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_S_FMT failed.");
             }
