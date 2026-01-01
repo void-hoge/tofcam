@@ -5,9 +5,15 @@
 
 namespace tofcam {
 
+enum class Mode {
+    Single,
+    Double,
+};
+
 class BO548 {
   public:
-    BO548(const char* device, const MemType memtype = MemType::MMAP);
+    BO548(const char* device, const char* csi_device, const char* sensor_device, const MemType memtype = MemType::MMAP,
+          const Mode mode = Mode::Single);
 
     ~BO548();
 
@@ -21,6 +27,9 @@ class BO548 {
 
   private:
     Camera camera;
+    Mode mode;
+    int csi_fd = -1;
+    int sensor_fd = -1;
     uint32_t width = 0;
     uint32_t height = 0;
     std::vector<float> depth;

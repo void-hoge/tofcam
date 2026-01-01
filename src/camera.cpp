@@ -60,7 +60,7 @@ Camera::Camera(
                 throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_S_FMT failed.");
             }
         }
-        { // setup mmap buffers
+        { // setup buffers
             struct v4l2_requestbuffers req = {};
             req.count = num_buffers;
             req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
