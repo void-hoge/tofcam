@@ -2,6 +2,7 @@
 #include <cstring>
 #include <fstream>
 #include <vector>
+#include <chrono>
 
 void save_bytes(const char* filename, const void* ptr, const size_t size) {
     FILE* fp = fopen(filename, "wb");
@@ -26,19 +27,26 @@ int main(int argc, char* argv[]) {
     const char* csinode = argv[2];
     const char* sensornode = argv[3];
     const char* directory = argv[4];
+    const uint32_t iter = 35 * 100 / 2;
     std::vector<std::vector<float>> depth_frames;
     std::vector<std::vector<float>> confidence_frames;
     auto camera = tofcam::BO548(devnode, csinode, sensornode, true, true, tofcam::MemType::DMABUF, tofcam::Mode::Double);
     const auto [width, height] = camera.get_size();
     camera.stream_on();
-    for (int i = 0; i < 35; i++) {
+
+    auto begin = std::chrono::system_clock::now();
+    for (int i = 0; i < iter; i++) {
         auto [depth, confidence] = camera.get_frame();
-        depth_frames.emplace_back(width * height);
-        std::memcpy(depth_frames.back().data(), ((float*)depth) + width * height, sizeof(float) * width * height);
-        confidence_frames.emplace_back(width * height);
-        std::memcpy(confidence_frames.back().data(), ((float*)confidence) + width * height, sizeof(float) * width * height);
-        fprintf(stderr, "captured: %4d\n", i);
+        // depth_frames.emplace_back(width * height);
+        // std::memcpy(depth_frames.back().data(), ((float*)depth) + width * height, sizeof(float) * width * height);
+        // confidence_frames.emplace_back(width * height);
+        // std::memcpy(confidence_frames.back().data(), ((float*)confidence) + width * height, sizeof(float) * width * height);
+        fprintf(stderr, "frame: %4d\n", i);
     }
+    auto end = std::chrono::system_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+    fprintf(stderr, "captured %d frames in %.3lf s. (%.3lf fps)\n", iter, (double)elapsed / 1'000'000, (double)iter / (elapsed / 1'000'000.0));
+    
     camera.stream_off();
     for (int i = 0; i < depth_frames.size(); i++) {
         char path[256];
