@@ -16,7 +16,7 @@ enum class MemType {
 
 class Camera {
   public:
-    Camera(const char* device, const uint32_t num_buffers, const MemType memtype = MemType::MMAP,
+    Camera(const char* device, const uint32_t num_buffers, const MemType memtype,
            std::optional<const std::pair<uint32_t, uint32_t>> imagesize = std::nullopt);
     ~Camera() noexcept;
 

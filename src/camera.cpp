@@ -38,11 +38,11 @@ Camera::Camera(
                 fmt.fmt.pix.pixelformat = v4l2_fourcc('Y', '1', '2', 'P');
                 fmt.fmt.pix.colorspace = V4L2_COLORSPACE_DEFAULT;
                 if (syscall::ioctl(this->fd, VIDIOC_TRY_FMT, &fmt) < 0) {
-                    throw std::runtime_error("ioctl VIDIOC_TRY_FMT failed.");
+                    throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_TRY_FMT failed.");
                 }
             } else {
                 if (syscall::ioctl(this->fd, VIDIOC_G_FMT, &fmt) < 0) {
-                    throw std::runtime_error("ioctl VIDIOC_G_FMT failed.");
+                    throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_G_FMT failed.");
                 }
                 if (fmt.fmt.pix.sizeimage == 0) {
                     throw std::runtime_error("Sizeimage is zero, unsupported format?");

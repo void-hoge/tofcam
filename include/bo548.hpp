@@ -12,8 +12,8 @@ enum class Mode {
 
 class BO548 {
   public:
-    BO548(const char* device, const char* csi_device, const char* sensor_device, const MemType memtype = MemType::MMAP,
-          const Mode mode = Mode::Single);
+    BO548(const char* device, const char* csi_device, const char* sensor_device, const bool vflip = true,
+          const bool hflip = true, const MemType memtype = MemType::DMABUF, const Mode mode = Mode::Single);
 
     ~BO548();
 
