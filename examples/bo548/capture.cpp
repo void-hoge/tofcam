@@ -28,14 +28,14 @@ int main(int argc, char* argv[]) {
     const char* directory = argv[4];
     std::vector<std::vector<float>> depth_frames;
     std::vector<std::vector<float>> confidence_frames;
-    auto camera = tofcam::BO548(devnode, csinode, sensornode, tofcam::MemType::DMABUF, tofcam::Mode::Double);
+    auto camera = tofcam::BO548(devnode, csinode, sensornode, true, true, tofcam::MemType::DMABUF, tofcam::Mode::Double);
     const auto [width, height] = camera.get_size();
     camera.stream_on();
     for (int i = 0; i < 35; i++) {
         auto [depth, confidence] = camera.get_frame();
-        depth_frames.emplace_back(std::vector<float>(width * height));
+        depth_frames.emplace_back(width * height);
         std::memcpy(depth_frames.back().data(), ((float*)depth) + width * height, sizeof(float) * width * height);
-        confidence_frames.emplace_back(std::vector<float>(width * height));
+        confidence_frames.emplace_back(width * height);
         std::memcpy(confidence_frames.back().data(), ((float*)confidence) + width * height, sizeof(float) * width * height);
         fprintf(stderr, "captured: %4d\n", i);
     }

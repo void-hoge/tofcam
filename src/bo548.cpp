@@ -6,7 +6,9 @@
 
 namespace tofcam {
 
-BO548::BO548(const char* device, const char* csi_device, const char* sensor_device, const MemType memtype, const Mode mode)
+BO548::BO548(
+        const char* device, const char* csi_device, const char* sensor_device, const bool vflip, const bool hflip,
+        const MemType memtype, const Mode mode)
     : camera(device, 4, memtype,
              mode == Mode::Single ? std::pair<uint32_t, uint32_t>{640, 2405} : std::pair<uint32_t, uint32_t>{640, 4810}),
       mode(mode) {
@@ -21,6 +23,24 @@ BO548::BO548(const char* device, const char* csi_device, const char* sensor_devi
     }
     auto [width, height] = this->camera.get_size();
     try {
+        { // flip
+            if (vflip) {
+                struct v4l2_control ctrl = {};
+                ctrl.id = V4L2_CID_HFLIP;
+                ctrl.value = 1;
+                if (syscall::ioctl(this->sensor_fd, VIDIOC_S_CTRL, &ctrl)) {
+                    throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_S_CTRL failed.");
+                }
+            }
+            if (hflip) {
+                struct v4l2_control ctrl = {};
+                ctrl.id = V4L2_CID_VFLIP;
+                ctrl.value = 1;
+                if (syscall::ioctl(this->sensor_fd, VIDIOC_S_CTRL, &ctrl)) {
+                    throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_S_CTRL failed.");
+                }
+            }
+        }
         { // setup the format of the csi2 sub-device
             struct v4l2_subdev_format fmt = {};
             fmt.which = V4L2_SUBDEV_FORMAT_ACTIVE;
