@@ -21,7 +21,7 @@ BO548::BO548(const char* device, const char* csi_device, const char* sensor_devi
     }
     auto [width, height] = this->camera.get_size();
     try {
-        {
+        { // setup the format of the csi2 sub-device
             struct v4l2_subdev_format fmt = {};
             fmt.which = V4L2_SUBDEV_FORMAT_ACTIVE;
             fmt.pad = 0;
@@ -33,7 +33,7 @@ BO548::BO548(const char* device, const char* csi_device, const char* sensor_devi
                 throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_SUBDEV_S_FMT failed.");
             }
         }
-        {
+        { // setup the format of the sensor sub-device
             struct v4l2_subdev_format fmt = {};
             fmt.which = V4L2_SUBDEV_FORMAT_ACTIVE;
             fmt.pad = 0;

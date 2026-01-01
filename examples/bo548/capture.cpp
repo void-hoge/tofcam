@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
     auto camera = tofcam::BO548(devnode, csinode, sensornode, tofcam::MemType::DMABUF, tofcam::Mode::Double);
     const auto [width, height] = camera.get_size();
     camera.stream_on();
-    for (int i = 0; i < 30; i++) {
+    for (int i = 0; i < 35; i++) {
         auto [depth, confidence] = camera.get_frame();
         depth_frames.emplace_back(std::vector<float>(width * height));
         std::memcpy(depth_frames.back().data(), ((float*)depth) + width * height, sizeof(float) * width * height);
