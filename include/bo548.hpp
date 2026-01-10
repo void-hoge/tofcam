@@ -21,9 +21,13 @@ class BO548 {
 
     void stream_off();
 
-    std::pair<float*, float*> get_frame();
+    std::pair<float*, float*> get_frame(); // {depth, confidence}
 
-    std::pair<uint32_t, uint32_t> get_size() const;
+    std::pair<uint32_t, uint32_t> get_size() const; // {width, height}
+
+    std::pair<uint32_t, uint32_t> get_bytes() const; // {sizeimage, bytesused}
+
+    void* get_rawframe();
 
   private:
     Camera camera;
@@ -34,6 +38,7 @@ class BO548 {
     uint32_t height = 0;
     std::vector<float> depth;
     std::vector<float> confidence;
+    std::optional<uint32_t> locked_index = std::nullopt;
 };
 
 } // namespace tofcam
