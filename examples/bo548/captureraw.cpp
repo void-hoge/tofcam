@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
 
     for (int i = 0; i < rawframes.size(); i++) {
         char path[256];
-        snprintf(path, sizeof(path), "%s/frame_%03d.bin", directory, i);
+        snprintf(path, sizeof(path), "%s/frame_%04d.raw", directory, i);
         save_bytes(path, rawframes[i].data(), bytesplane);
     }
 }

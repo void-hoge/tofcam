@@ -9,7 +9,7 @@ class FakeCamera {
   public:
     ~FakeCamera() = default;
 
-    FakeCamera(const char* dir, const uint32_t max_frames);
+    FakeCamera(const char* dir, const uint32_t width, const uint32_t height, const uint32_t bytesperline, const uint32_t max_frames);
 
     void stream_on();
 
@@ -26,11 +26,10 @@ class FakeCamera {
     std::pair<uint32_t, uint32_t> get_bytes() const;
 
   private:
-    static constexpr uint32_t WIDTH = 240;
-    static constexpr uint32_t HEIGHT = 180;
-    static constexpr uint32_t BYTESPERLINE = 368;
-    static constexpr uint32_t SIZEIMAGE = BYTESPERLINE * HEIGHT;
-
+    const uint32_t width;
+    const uint32_t height;
+    const uint32_t bytesperline;
+    const uint32_t sizeimage;
     uint32_t index = 0;
 
     std::vector<std::vector<uint8_t>> frames;
