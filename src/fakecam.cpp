@@ -3,7 +3,9 @@
 
 namespace tofcam {
 
-FakeCamera::FakeCamera(const char* dir, const uint32_t max_frames) {
+FakeCamera::FakeCamera(
+        const char* dir, const uint32_t width, const uint32_t height, const uint32_t bytesperline, const uint32_t max_frames)
+    : width(width), height(height), bytesperline(bytesperline), sizeimage(bytesperline * height) {
     this->load_frames(dir, max_frames);
     if (this->frames.size() == 0) {
         throw std::runtime_error("no frames");
@@ -24,11 +26,11 @@ std::pair<void*, uint32_t> FakeCamera::dequeue() {
 void FakeCamera::enqueue(const uint32_t) {}
 
 std::pair<uint32_t, uint32_t> FakeCamera::get_size() const {
-    return {WIDTH, HEIGHT};
+    return {this->width, this->height};
 }
 
 std::pair<uint32_t, uint32_t> FakeCamera::get_bytes() const {
-    return {SIZEIMAGE, BYTESPERLINE};
+    return {this->sizeimage, this->bytesperline};
 }
 
 void FakeCamera::load_frames(const char* dir, const uint32_t max_frames) {
@@ -43,7 +45,7 @@ void FakeCamera::load_frames(const char* dir, const uint32_t max_frames) {
         ifs.seekg(0, std::ios::end);
         std::streamsize size = ifs.tellg();
         ifs.seekg(0, std::ios::beg);
-        if (size != SIZEIMAGE) {
+        if (size != this->sizeimage) {
             continue;
         }
         this->frames.emplace_back(size);

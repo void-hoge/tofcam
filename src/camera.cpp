@@ -138,6 +138,9 @@ std::pair<void*, uint32_t> Camera::dequeue() {
     if (syscall::ioctl(this->fd, VIDIOC_DQBUF, &buf) < 0) {
         throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_DQBUF failed.");
     }
+    if (buf.bytesused < this->width * this->height * 3 / 2) {
+        throw std::runtime_error("bytesused is too small.");
+    }
     return {this->buffers->sync_start(buf.index), buf.index};
 }
 

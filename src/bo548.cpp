@@ -121,22 +121,22 @@ void BO548::stream_off() {
 
 std::pair<float*, float*> BO548::get_frame() {
     const auto [width, height] = this->get_size();
-    auto [sizeimage, bytesperline] = this->camera.get_bytes();
-    auto [ptr, idx] = this->camera.dequeue();
+    const auto [sizeimage, bytesperline] = this->camera.get_bytes();
+    const auto [ptr, idx] = this->camera.dequeue();
     {
-        auto phase0 = static_cast<uint8_t*>(ptr) + bytesperline * height * 0;
-        auto phase1 = static_cast<uint8_t*>(ptr) + bytesperline * height * 1;
-        auto phase2 = static_cast<uint8_t*>(ptr) + bytesperline * height * 2;
-        auto phase3 = static_cast<uint8_t*>(ptr) + bytesperline * height * 3;
+        const auto phase0 = static_cast<uint8_t*>(ptr) + bytesperline * height * 0;
+        const auto phase1 = static_cast<uint8_t*>(ptr) + bytesperline * height * 1;
+        const auto phase2 = static_cast<uint8_t*>(ptr) + bytesperline * height * 2;
+        const auto phase3 = static_cast<uint8_t*>(ptr) + bytesperline * height * 3;
         compute_depth_confidence_from_y12p_neon<true, Rotation::Zero>(
                 this->depth.data(), this->confidence.data(), phase0, phase1, phase2, phase3, width, height, bytesperline,
                 90'000'000);
     }
     if (this->mode == Mode::Double) {
-        auto phase0 = static_cast<uint8_t*>(ptr) + bytesperline * 2405 + bytesperline * height * 0;
-        auto phase1 = static_cast<uint8_t*>(ptr) + bytesperline * 2405 + bytesperline * height * 1;
-        auto phase2 = static_cast<uint8_t*>(ptr) + bytesperline * 2405 + bytesperline * height * 2;
-        auto phase3 = static_cast<uint8_t*>(ptr) + bytesperline * 2405 + bytesperline * height * 3;
+        const auto phase0 = static_cast<uint8_t*>(ptr) + bytesperline * 2405 + bytesperline * height * 0;
+        const auto phase1 = static_cast<uint8_t*>(ptr) + bytesperline * 2405 + bytesperline * height * 1;
+        const auto phase2 = static_cast<uint8_t*>(ptr) + bytesperline * 2405 + bytesperline * height * 2;
+        const auto phase3 = static_cast<uint8_t*>(ptr) + bytesperline * 2405 + bytesperline * height * 3;
         compute_depth_confidence_from_y12p_neon<true, Rotation::Zero>(
                 this->depth.data() + width * height, this->confidence.data() + width * height, phase0, phase1, phase2, phase3,
                 width, height, bytesperline, 15'000'000);
@@ -156,6 +156,20 @@ void BO548::set_exposure(const int exposure) {
     if (syscall::ioctl(this->sensor_fd, VIDIOC_S_CTRL, &ctrl)) {
         throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_S_CTRL failed.");
     }
+}
+
+std::pair<uint32_t, uint32_t> BO548::get_bytes() const {
+    return this->camera.get_bytes();
+}
+
+void* BO548::get_rawframe() {
+    if (this->locked_index) {
+        this->camera.enqueue(this->locked_index.value());
+        this->locked_index = std::nullopt;
+    }
+    const auto [ptr, idx] = this->camera.dequeue();
+    this->locked_index = idx;
+    return ptr;
 }
 
 } // namespace tofcam

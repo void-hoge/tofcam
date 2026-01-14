@@ -16,15 +16,16 @@ class Timer {
 };
 
 int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        fprintf(stderr, "usage: %s <source>\n", argv[0]);
+    if (argc != 5) {
+        fprintf(stderr, "usage: %s <source> <width> <height> <bytesperline>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
     const char* dir = argv[1];
+    const uint32_t width = std::stoi(argv[2]);
+    const uint32_t height = std::stoi(argv[3]);
+    const uint32_t bytesperline = std::stoi(argv[4]);
     constexpr uint32_t ITER = 30 * 1000;
-    auto camera = tofcam::FakeCamera(dir, 8);
-    const auto [width, height] = camera.get_size();
-    const auto [sizeimage, bytesperline] = camera.get_bytes();
+    auto camera = tofcam::FakeCamera(dir, width, height, bytesperline, 8);
     std::vector unpacked(4, std::vector<int16_t>(width * height, 0));
     std::vector<float> depth(width * height, 0.0f);
     std::vector<float> amplitude(width * height, 0.0f);
