@@ -18,7 +18,7 @@ void save_bytes(const char* filename, const void* ptr, const size_t size) {
     }
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char* argv[]) {
     if (argc != 5) {
         fprintf(stderr, "usage: %s <device> <csi> <sensor> <directory>\n", argv[0]);
         return 0;
