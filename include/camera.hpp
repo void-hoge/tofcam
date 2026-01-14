@@ -3,6 +3,7 @@
 #include <buffpool.hpp>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -15,7 +16,8 @@ enum class MemType {
 
 class Camera {
   public:
-    Camera(const char* device, const uint32_t num_buffers, const MemType memtype = MemType::MMAP);
+    Camera(const char* device, const uint32_t num_buffers, const MemType memtype,
+           std::optional<const std::pair<uint32_t, uint32_t>> imagesize = std::nullopt);
     ~Camera() noexcept;
 
     Camera(Camera&& other) noexcept;
@@ -37,14 +39,16 @@ class Camera {
     // {sizeimage, bytesperline}
     std::pair<uint32_t, uint32_t> get_bytes() const;
 
-  private:
-    static constexpr uint32_t WIDTH = 240;
-    static constexpr uint32_t HEIGHT = 180;
+    uint32_t get_format() const;
 
-    uint32_t MemoryType;
+  private:
+    uint32_t memorytype;
     int fd = -1;
+    uint32_t width = 0;
+    uint32_t height = 0;
     uint32_t sizeimage = 0;
     uint32_t bytesperline = 0;
+    uint32_t pixelformat = 0;
 
     std::unique_ptr<BufferPool> buffers;
 };

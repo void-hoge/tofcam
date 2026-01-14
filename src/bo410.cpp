@@ -5,7 +5,8 @@
 
 namespace tofcam {
 
-BO410::BO410(const char* device, const char* subdevice, const int range, const MemType memtype) : camera(device, 8, memtype) {
+BO410::BO410(const char* device, const char* subdevice, const int range, const MemType memtype)
+    : camera(device, 8, memtype, std::nullopt) {
     if (range != 2000 && range != 4000) {
         throw std::invalid_argument("Invalid range mode.");
     }
@@ -32,6 +33,13 @@ BO410::BO410(const char* device, const char* subdevice, const int range, const M
             this->subfd = -1;
         }
         throw;
+    }
+}
+
+BO410::~BO410() {
+    if (this->subfd >= 0) {
+        syscall::close(this->subfd);
+        this->subfd = -1;
     }
 }
 
