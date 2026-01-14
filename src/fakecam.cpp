@@ -3,7 +3,9 @@
 
 namespace tofcam {
 
-FakeCamera::FakeCamera(const char* dir, const uint32_t width, const uint32_t height, const uint32_t bytesperline, const uint32_t max_frames) : width(width), height(height), bytesperline(bytesperline), sizeimage(bytesperline * height) {
+FakeCamera::FakeCamera(
+        const char* dir, const uint32_t width, const uint32_t height, const uint32_t bytesperline, const uint32_t max_frames)
+    : width(width), height(height), bytesperline(bytesperline), sizeimage(bytesperline * height) {
     this->load_frames(dir, max_frames);
     if (this->frames.size() == 0) {
         throw std::runtime_error("no frames");

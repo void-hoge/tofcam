@@ -9,7 +9,9 @@ class FakeCamera {
   public:
     ~FakeCamera() = default;
 
-    FakeCamera(const char* dir, const uint32_t width, const uint32_t height, const uint32_t bytesperline, const uint32_t max_frames);
+    FakeCamera(
+            const char* dir, const uint32_t width, const uint32_t height, const uint32_t bytesperline,
+            const uint32_t max_frames);
 
     void stream_on();
 
