@@ -8,7 +8,7 @@ namespace tofcam {
 
 BO548::BO548(
         const char* device, const char* csi_device, const char* sensor_device, const bool vflip, const bool hflip,
-        const MemType memtype, const Mode mode)
+        const int exposure, const MemType memtype, const Mode mode)
     : camera(device, 4, memtype,
              mode == Mode::Single ? std::pair<uint32_t, uint32_t>{640, 2405} : std::pair<uint32_t, uint32_t>{640, 4810}),
       mode(mode) {
@@ -39,6 +39,14 @@ BO548::BO548(
                 if (syscall::ioctl(this->sensor_fd, VIDIOC_S_CTRL, &ctrl)) {
                     throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_S_CTRL failed.");
                 }
+            }
+        }
+        { // set exposure
+            struct v4l2_control ctrl = {};
+            ctrl.id = V4L2_CID_EXPOSURE;
+            ctrl.value = exposure;
+            if (syscall::ioctl(this->sensor_fd, VIDIOC_S_CTRL, &ctrl)) {
+                throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_S_CTRL failed.");
             }
         }
         { // setup the format of the csi2 sub-device
@@ -139,6 +147,15 @@ std::pair<float*, float*> BO548::get_frame() {
 
 std::pair<uint32_t, uint32_t> BO548::get_size() const {
     return {640, 480};
+}
+
+void BO548::set_exposure(const int exposure) {
+    struct v4l2_control ctrl = {};
+    ctrl.id = V4L2_CID_EXPOSURE;
+    ctrl.value = exposure;
+    if (syscall::ioctl(this->sensor_fd, VIDIOC_S_CTRL, &ctrl)) {
+        throw std::system_error(errno, std::generic_category(), "ioctl VIDIOC_S_CTRL failed.");
+    }
 }
 
 } // namespace tofcam
