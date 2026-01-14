@@ -85,7 +85,6 @@ DmaBufferPool::DmaBufferPool(const char* allocator, const uint32_t num_buffers, 
             alloc.fd_flags = O_RDWR | O_CLOEXEC;
             alloc.heap_flags = 0;
             if (syscall::ioctl(this->fd, DMA_HEAP_IOCTL_ALLOC, &alloc) < 0) {
-                fprintf(stderr, "%d\n", errno);
                 throw std::system_error(errno, std::generic_category(), "ioctl DMA_HEAP_IOCTL_ALLOC failed.");
             }
             auto addr = syscall::mmap(nullptr, length, PROT_READ | PROT_WRITE, MAP_SHARED, alloc.fd, 0);
@@ -115,7 +114,7 @@ DmaBufferPool::DmaBufferPool(const char* allocator, const uint32_t num_buffers, 
 }
 
 DmaBufferPool::~DmaBufferPool() noexcept {
-    for (auto& [addr, len, bfd] : this->buffers) {
+    for (auto& [addr, len, bfd] : buffers) {
         if (addr) {
             syscall::munmap(addr, len);
         }

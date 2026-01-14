@@ -7,7 +7,7 @@ namespace tofcam {
 
 class BO410 {
   public:
-    BO410(const char* device, const char* subdevice, const int range, const MemType memtype = MemType::DMABUF);
+    BO410(const char* device, const char* subdevice, const int range, const MemType memtype = MemType::MMAP);
 
     ~BO410();
 
